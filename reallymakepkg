@@ -5,6 +5,16 @@ _reallymakepkg() {
     _pkgs=() \
     _arch='https://gitlab.archlinux.org'
   _pkgs=("$@")
+  [[ ! -n "${TERMUX_VERSION}"]] && \
+    _tmpdir="$(mktemp -d)" && \
+    cp \
+      -a \
+      "$(pwd)"/* \
+      "${_tmpdir}" && \
+    sed \
+      "s/pkgdir/terdir/g" \
+      "$(pwd)/PKGBUILD" > \
+      "${tmpdir}/PKGBUILD"
   for _pkg in "${_pkgs[@]}"; do
     git \
       clone \
