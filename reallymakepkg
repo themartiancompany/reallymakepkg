@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+_reallymakepkg() {
+  local \
+    _pkgs=() \
+    _arch='https://gitlab.archlinux.org'
+  _pkgs=("$@")
+  for _pkg in "${_pkgs[@]}"; do
+    git \
+      clone \
+      "${_arch}/archlinux/packaging/packages/${_pkg}"
+  done
+}
+
+_pkgs=("$@")
+
+[[ ${#} < 1]] &&\
+  echo \
+    'Usage: aspe [pkgs]
+
+_aspe \
+  "${_pkgs[@]}"
