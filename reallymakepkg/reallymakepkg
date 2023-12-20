@@ -5,7 +5,7 @@ _reallymakepkg() {
     _args=()
   _args=(
     "$@")
-  [[ ! -n "${TERMUX_VERSION}"]] && \
+  [[ -n "${TERMUX_VERSION}" ]] && \
     _tmpdir="$(mktemp -d)" && \
     cp \
       -a \
@@ -17,8 +17,15 @@ _reallymakepkg() {
       "${_tmpdir}/PKGBUILD"
   cd \
     "${_tmpdir}"
+  cat \
+    "${_tmpdir}/PKGBUILD"
   makepkg \
     "${_args[@]}"
+  mv \
+    *".pkg."* \
+    "${OLDPWD}"
+  cd \
+    "${OLDPWD}"
 }
 
 _args=(
