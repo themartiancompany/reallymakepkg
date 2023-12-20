@@ -1,5 +1,5 @@
 #
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 ifeq ($(TERMUX_VERSION),)
 DESTDIR := $(TERMUX_PREFIX)/usr
@@ -20,6 +20,11 @@ shellcheck:
 
 install:
 
-	install -vDm 755 reallymakepkg "$(BIN_DIR)/reallymakepkg"
+	install -vDm 755 reallymakepkg/reallymakepkg "$(BIN_DIR)/reallymakepkg"
 
-.PHONY: check install shellcheck
+uninstall:
+
+	rm "$(BIN_DIR)/reallymakepkg"
+
+
+.PHONY: check install shellcheck uninstall
