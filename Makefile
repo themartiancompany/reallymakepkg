@@ -1,6 +1,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+TERMUX_PREFIX ?= /data/data/com.termux
+
 ifeq ($(TERMUX_VERSION),)
 DESTDIR := $(TERMUX_PREFIX)/usr
 endif
