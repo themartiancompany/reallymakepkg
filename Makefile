@@ -3,11 +3,12 @@
 
 TERMUX_PREFIX=/data/data/com.termux
 
+PREFIX ?= /usr
 ifeq ($(TERMUX_VERSION),)
-override DESTDIR=$(DESTDIR)/$(TERMUX_PREFIX)/usr
+PREFIX=$(TERMUX_PREFIX)/usr
 endif
 
-PREFIX ?= /usr/local
+
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
 
