@@ -4,7 +4,7 @@
 TERMUX_PREFIX ?= /data/data/com.termux
 
 ifeq ($(TERMUX_VERSION),)
-DESTDIR := $(TERMUX_PREFIX)/usr
+override DESTDIR := $(TERMUX_PREFIX)/usr
 endif
 
 PREFIX ?= /usr/local
