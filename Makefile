@@ -1,10 +1,10 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-TERMUX_PREFIX ?= /data/data/com.termux
+TERMUX_PREFIX=/data/data/com.termux
 
 ifeq ($(TERMUX_VERSION),)
-override DESTDIR := $(TERMUX_PREFIX)/usr
+override DESTDIR=$(DESTDIR)/$(TERMUX_PREFIX)/usr
 endif
 
 PREFIX ?= /usr/local
