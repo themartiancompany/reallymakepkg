@@ -17,8 +17,6 @@ _reallymakepkg() {
       "${_tmpdir}/PKGBUILD"
   cd \
     "${_tmpdir}"
-  cat \
-    "${_tmpdir}/PKGBUILD"
   makepkg \
     "${_args[@]}"
   mv \
