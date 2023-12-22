@@ -24,6 +24,8 @@ _reallymakepkg() {
     "${OLDPWD}"
   cd \
     "${OLDPWD}"
+  rm \
+    -rf "${_tmpdir}"
 }
 
 _args=(
