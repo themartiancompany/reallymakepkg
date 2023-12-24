@@ -11,6 +11,7 @@ endif
 
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
+DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/reallymakepkg
 
 FILES=$(wildcard reallymakepkg)
 DOC_FILES=$(wildcard *.rst)
