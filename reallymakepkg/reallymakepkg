@@ -14,6 +14,16 @@ _reallymakepkg() {
     sed \
       "s/pkgdir/terdir/g" \
       "$(pwd)/PKGBUILD" > \
+      "${_tmpdir}/PKGBUILD" && \
+    _pypattern="$( \
+      cat \
+        "${_tmpdir}/PKGBUILD" | \
+        grep \
+	  -o \
+	  'root=[^ ]*pkgdir[^ ]*')" && \
+    sed \
+      -i \
+      "s/${_pypattern}/--root=\"\${terdir}\"/g" \
       "${_tmpdir}/PKGBUILD"
   cd \
     "${_tmpdir}"
