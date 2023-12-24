@@ -13,6 +13,7 @@ BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
 
 FILES=$(wildcard reallymakepkg)
+DOC_FILES=$(wildcard *.rst)
 
 all:
 
@@ -23,11 +24,19 @@ shellcheck:
 
 install:
 
+	install-scripts install-doc
+
+install-scripts:
+
 	install -vDm 755 reallymakepkg/reallymakepkg "$(BIN_DIR)/reallymakepkg"
+
+install-doc:
+
+        install -vDm 644 $(DOC_FILES) -t $(DOC_DIR)
 
 uninstall:
 
 	rm "$(BIN_DIR)/reallymakepkg"
 
 
-.PHONY: check install shellcheck uninstall
+.PHONY: check install install-scripts install-doc shellcheck uninstall

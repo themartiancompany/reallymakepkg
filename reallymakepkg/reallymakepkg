@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
 
+# System-independent makepkg
 _reallymakepkg() {
   local \
     _args=() \
