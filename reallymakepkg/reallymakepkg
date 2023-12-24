@@ -41,10 +41,11 @@ _termux_makepkg() {
       grep \
         -o \
         'root=[^ ]*terdir[^ ]*')"
-  sed \
-    -i \
-    "s/${_pypattern}/root=\"\${pkgdir}\"/g" \
-    "${_tmpdir}/PKGBUILD"
+  [[ "${_pypattern}" != "" ]] && \
+    sed \
+      -i \
+      "s/${_pypattern}/root=\"\${pkgdir}\"/g" \
+      "${_tmpdir}/PKGBUILD"
   cd \
     "${_tmpdir}"
   makepkg \
