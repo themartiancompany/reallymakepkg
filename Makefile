@@ -20,6 +20,7 @@ all:
 check: shellcheck 
 
 shellcheck:
+
 	shellcheck -s bash $(FILES)
 
 install:
@@ -32,7 +33,7 @@ install-scripts:
 
 install-doc:
 
-        install -vDm 644 $(DOC_FILES) -t $(DOC_DIR)
+	install -vDm 644 $(DOC_FILES) -t $(DOC_DIR)
 
 uninstall:
 
