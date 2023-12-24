@@ -50,14 +50,15 @@ _termux_makepkg() {
     "${_tmpdir}"
   makepkg \
     "${_args[@]}"
+  [[ $? -eq 0 ]] && \
   [[ *".pkg."* != "" ]] && \
     mv \
       *".pkg."* \
-      "${OLDPWD}"
+      "${OLDPWD}" && \
+    rm \
+      -rf "${_tmpdir}"
   cd \
     "${OLDPWD}"
-  rm \
-    -rf "${_tmpdir}"
 }
 
 _args=(
