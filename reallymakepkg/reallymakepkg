@@ -5,30 +5,46 @@
 # System-independent makepkg
 _reallymakepkg() {
   local \
+    _args=()
+  _args=(
+    "$@")
+  [[ -n "${TERMUX_VERSION}" ]] && \
+    _termux_makepkg \
+      "${_args[@]}" && \
+    return
+  makepkg \
+    "${_args[@]}"
+}
+
+# Termux makepkg
+# $@:makepkg args
+_termux_makepkg() {
+  local \
     _args=() \
     _pypattern
   _args=(
     "$@")
-  [[ -n "${TERMUX_VERSION}" ]] && \
-    _tmpdir="$(mktemp -d)" && \
-    cp \
-      -a \
-      "$(pwd)"/* \
-      "${_tmpdir}" && \
-    sed \
-      "s/pkgdir/terdir/g" \
-      "$(pwd)/PKGBUILD" > \
-      "${_tmpdir}/PKGBUILD" && \
-    _pypattern="$( \
-      cat \
-        "${_tmpdir}/PKGBUILD" | \
-        grep \
-	  -o \
-	  'root=[^ ]*terdir[^ ]*')" && \
-    sed \
-      -i \
-      "s/${_pypattern}/root=\"\${pkgdir}\"/g" \
-      "${_tmpdir}/PKGBUILD"
+  _tmpdir="$( \
+    mktemp \
+      -d)" && \
+  cp \
+    -a \
+    "$(pwd)"/* \
+    "${_tmpdir}"
+  sed \
+    "s/pkgdir/terdir/g" \
+    "$(pwd)/PKGBUILD" > \
+    "${_tmpdir}/PKGBUILD"
+  _pypattern="$( \
+    cat \
+      "${_tmpdir}/PKGBUILD" | \
+      grep \
+        -o \
+        'root=[^ ]*terdir[^ ]*')"
+  sed \
+    -i \
+    "s/${_pypattern}/root=\"\${pkgdir}\"/g" \
+    "${_tmpdir}/PKGBUILD"
   cd \
     "${_tmpdir}"
   makepkg \
