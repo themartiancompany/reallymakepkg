@@ -26,7 +26,7 @@ _termux_makepkg() {
     "$@")
   _tmpdir="$( \
     mktemp \
-      -d)" && \
+      -d)"
   cp \
     -a \
     "$(pwd)"/* \
