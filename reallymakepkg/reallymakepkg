@@ -2,7 +2,8 @@
 
 _reallymakepkg() {
   local \
-    _args=()
+    _args=() \
+    _pypattern
   _args=(
     "$@")
   [[ -n "${TERMUX_VERSION}" ]] && \
@@ -20,10 +21,10 @@ _reallymakepkg() {
         "${_tmpdir}/PKGBUILD" | \
         grep \
 	  -o \
-	  'root=[^ ]*pkgdir[^ ]*')" && \
+	  'root=[^ ]*terdir[^ ]*')" && \
     sed \
       -i \
-      "s/${_pypattern}/--root=\"\${terdir}\"/g" \
+      "s/${_pypattern}/--root=\"\${pkgdir}\"/g" \
       "${_tmpdir}/PKGBUILD"
   cd \
     "${_tmpdir}"
