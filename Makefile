@@ -20,12 +20,9 @@ all:
 check: shellcheck 
 
 shellcheck:
-
 	shellcheck -s bash $(FILES)
 
-install:
-
-	install-scripts install-doc
+install: install-scripts install-doc
 
 install-scripts:
 
