@@ -24,7 +24,7 @@ _reallymakepkg() {
 	  'root=[^ ]*terdir[^ ]*')" && \
     sed \
       -i \
-      "s/${_pypattern}/--root=\"\${pkgdir}\"/g" \
+      "s/${_pypattern}/root=\"\${pkgdir}\"/g" \
       "${_tmpdir}/PKGBUILD"
   cd \
     "${_tmpdir}"
