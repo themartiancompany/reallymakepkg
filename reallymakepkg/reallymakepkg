@@ -16,6 +16,15 @@ _reallymakepkg() {
     "${_args[@]}"
 }
 
+# Set C flags for the termux environment
+_termux_flags() {
+  if [[ ! " ${LDFLAGS} " =~ \
+        '-landroid-shmem -landroid-execinfo' ]] then
+    export \
+	LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo"
+  fi 
+}
+
 # Termux makepkg
 # $@:makepkg args
 _termux_makepkg() {
@@ -48,6 +57,7 @@ _termux_makepkg() {
       "${_tmpdir}/PKGBUILD"
   cd \
     "${_tmpdir}"
+  _termux_flags
   makepkg \
     "${_args[@]}"
   [[ $? -eq 0 ]] && \
