@@ -18,8 +18,9 @@ _reallymakepkg() {
 
 # Set C flags for the termux environment
 _termux_flags() {
-  if [[ ! " ${LDFLAGS} " =~ \
-        '-landroid-shmem -landroid-execinfo' ]] then
+  if [[ \
+    ! " ${LDFLAGS} " =~ \
+      '-landroid-shmem -landroid-execinfo' ]] then
     export \
 	LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo"
   fi 
