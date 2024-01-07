@@ -22,7 +22,7 @@ _termux_flags() {
     ! " ${LDFLAGS} " =~ \
       '-landroid-shmem -landroid-execinfo' ]] then
     export \
-	LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo"
+      LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo"
   fi 
 }
 
@@ -30,8 +30,9 @@ _termux_flags() {
 _is_python_pkg() {
   local \
     _pkgname=() \
-    _pkgname=() \
-    _flag
+    _provides=() \
+    _pkg
+  _flag=""
   _pkgname=(
     $(source \
         "${_tmpdir}/PKGBUILD" && \
@@ -56,28 +57,22 @@ _is_python_pkg() {
       break
     fi
   done
-  echo \
-    "${_flag}" 
 }
 
-is_setuptools() {
-  local \
-    _flag
+is_setuptools_pkg() {
   _flag="$( \
     cat \
       "${_tmpdir}/PKGBUILD" | \
       grep \
         -o \
         'setup.py')"
-  echo \
-    "${_flag}"
 }
 
 is_build_pkg() {
   local \
     _makedepends=() \
     _pkg \
-    _flag
+  _flag=""
   _makedepends=(
     $(source \
         "${_tmpdir}/PKGBUILD" && \
@@ -90,16 +85,17 @@ is_build_pkg() {
       break
     fi
   done
-  echo \
-    "${_flag}"
 }
 
 _python_quirks() {
   local \
     _build_pattern \
+    _flag \
     _setuptools_pattern
-  if [[ "$(_is_python_pkg)" == "true" ]]; then
-    if [[ "$(_is_setuptools)" != "" ]]; then
+  _is_python_pkg
+  if [[ "${_flag}" == "true" ]]; then
+    _is_setuptool_pkg 
+    if [[ "${_flag}" != "" ]]; then
       _setuptools_pattern="$( \
         cat \
           "${_tmpdir}/PKGBUILD" | \
@@ -112,7 +108,8 @@ _python_quirks() {
           "s/${_setuptools_pattern}/root=\"\${pkgdir}\"/g" \
           "${_tmpdir}/PKGBUILD"
     fi
-    if [[ "$(_is_build_pkg)" == "true" ]]; then
+    _is_build_pkg
+    if [[ "${_flag}" == "true" ]]; then
       _build_pattern="$( \
         cat \
           "${_tmpdir}/PKGBUILD" | \
