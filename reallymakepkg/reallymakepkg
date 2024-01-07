@@ -59,7 +59,7 @@ _is_python_pkg() {
   done
 }
 
-is_setuptools_pkg() {
+_is_setuptools_pkg() {
   _flag="$( \
     cat \
       "${_tmpdir}/PKGBUILD" | \
@@ -68,7 +68,7 @@ is_setuptools_pkg() {
         'setup.py')"
 }
 
-is_build_pkg() {
+_is_build_pkg() {
   local \
     _makedepends=() \
     _pkg \
