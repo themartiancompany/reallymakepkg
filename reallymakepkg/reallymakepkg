@@ -94,9 +94,12 @@ _python_quirks() {
     _setuptools_pattern
   _is_python_pkg
   if [[ "${_flag}" == "true" ]]; then
-    echo "detected as python pkg"
+    echo \
+      "INFO: detected as python pkg"
     _is_setuptools_pkg 
     if [[ "${_flag}" != "" ]]; then
+      echo \
+        "INFO: detected as setuptools pkg"
       _setuptools_pattern="$( \
         cat \
           "${_tmpdir}/PKGBUILD" | \
@@ -104,6 +107,8 @@ _python_quirks() {
             -o \
             'root=[^ ]*terdir[^ ]*')"
       [[ "${_setuptools_pattern}" != "" ]] && \
+	echo \
+	  "INFO: reverting terdir to pkgdir in --root option"
         sed \
           -i \
           "s/${_setuptools_pattern}/root=\"\${pkgdir}\"/g" \
@@ -111,6 +116,8 @@ _python_quirks() {
     fi
     _is_build_pkg
     if [[ "${_flag}" == "true" ]]; then
+      echo \
+	"INFO: Using / instead of terdir in build module's --destdir"
       _build_pattern="$( \
         cat \
           "${_tmpdir}/PKGBUILD" | \
@@ -120,7 +127,7 @@ _python_quirks() {
       [[ "${_build_pattern}" != "" ]] && \
         sed \
           -i \
-          "s/${_setuptools_pattern}/destdir=\//g" \
+          "s%${_setuptools_pattern}%destdir=/%g" \
           "${_tmpdir}/PKGBUILD"
     fi
   fi
