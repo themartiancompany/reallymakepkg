@@ -87,6 +87,48 @@ _is_build_pkg() {
   done
 }
 
+_setuptools_quirk() {
+  _is_setuptools_pkg 
+  if [[ "${_flag}" != "" ]]; then
+    echo \
+      "INFO: detected as setuptools pkg"
+    _setuptools_pattern="$( \
+      cat \
+        "${_tmpdir}/PKGBUILD" | \
+        grep \
+          -o \
+          'root=[^ ]*terdir[^ ]*')"
+    [[ "${_setuptools_pattern}" != "" ]] && \
+      echo \
+        "INFO: reverting terdir to pkgdir in --root option"
+      sed \
+        -i \
+        "s/${_setuptools_pattern}/root=\"\${pkgdir}\"/g" \
+        "${_tmpdir}/PKGBUILD"
+  fi
+}
+
+_build_quirk() {
+  local \
+    "${_pkg}"
+  _is_build_pkg
+  if [[ "${_flag}" == "true" ]]; then
+    echo \
+      "INFO: Using / instead of terdir in build module's --destdir"
+    _build_pattern="$( \
+      cat \
+        "${_tmpdir}/PKGBUILD" | \
+        grep \
+          -o \
+          'destdir=[^ ]*terdir[^ ]*')"
+    [[ "${_build_pattern}" != "" ]] && \
+      sed \
+        -i \
+        "s%${_setuptools_pattern}%destdir=/%g" \
+        "${_tmpdir}/PKGBUILD"
+  fi
+}
+
 _python_quirks() {
   local \
     _build_pattern \
@@ -96,40 +138,8 @@ _python_quirks() {
   if [[ "${_flag}" == "true" ]]; then
     echo \
       "INFO: detected as python pkg"
-    _is_setuptools_pkg 
-    if [[ "${_flag}" != "" ]]; then
-      echo \
-        "INFO: detected as setuptools pkg"
-      _setuptools_pattern="$( \
-        cat \
-          "${_tmpdir}/PKGBUILD" | \
-          grep \
-            -o \
-            'root=[^ ]*terdir[^ ]*')"
-      [[ "${_setuptools_pattern}" != "" ]] && \
-	echo \
-	  "INFO: reverting terdir to pkgdir in --root option"
-        sed \
-          -i \
-          "s/${_setuptools_pattern}/root=\"\${pkgdir}\"/g" \
-          "${_tmpdir}/PKGBUILD"
-    fi
-    _is_build_pkg
-    if [[ "${_flag}" == "true" ]]; then
-      echo \
-	"INFO: Using / instead of terdir in build module's --destdir"
-      _build_pattern="$( \
-        cat \
-          "${_tmpdir}/PKGBUILD" | \
-          grep \
-            -o \
-            'destdir=[^ ]*terdir[^ ]*')"
-      [[ "${_build_pattern}" != "" ]] && \
-        sed \
-          -i \
-          "s%${_setuptools_pattern}%destdir=/%g" \
-          "${_tmpdir}/PKGBUILD"
-    fi
+    _build_quirk
+    _setuptools_quirk
   fi
 }
 
