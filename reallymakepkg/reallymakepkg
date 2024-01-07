@@ -94,7 +94,7 @@ _python_quirks() {
     _setuptools_pattern
   _is_python_pkg
   if [[ "${_flag}" == "true" ]]; then
-    _is_setuptool_pkg 
+    _is_setuptools_pkg 
     if [[ "${_flag}" != "" ]]; then
       _setuptools_pattern="$( \
         cat \
