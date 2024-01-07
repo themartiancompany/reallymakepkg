@@ -88,43 +88,45 @@ _is_build_pkg() {
 }
 
 _setuptools_quirk() {
+  local \
+    _pattern
   _is_setuptools_pkg 
   if [[ "${_flag}" != "" ]]; then
     echo \
       "INFO: detected as setuptools pkg"
-    _setuptools_pattern="$( \
+    _pattern="$( \
       cat \
         "${_tmpdir}/PKGBUILD" | \
         grep \
           -o \
           'root=[^ ]*terdir[^ ]*')"
-    [[ "${_setuptools_pattern}" != "" ]] && \
+    [[ "${_pattern}" != "" ]] && \
       echo \
         "INFO: reverting terdir to pkgdir in --root option"
       sed \
         -i \
-        "s/${_setuptools_pattern}/root=\"\${pkgdir}\"/g" \
+        "s/${_pattern}/root=\"\${pkgdir}\"/g" \
         "${_tmpdir}/PKGBUILD"
   fi
 }
 
 _build_quirk() {
   local \
-    "${_pkg}"
+    _pattern
   _is_build_pkg
   if [[ "${_flag}" == "true" ]]; then
     echo \
       "INFO: Using / instead of terdir in build module's --destdir"
-    _build_pattern="$( \
+    _pattern="$( \
       cat \
         "${_tmpdir}/PKGBUILD" | \
         grep \
           -o \
           'destdir=[^ ]*terdir[^ ]*')"
-    [[ "${_build_pattern}" != "" ]] && \
+    [[ "${_pattern}" != "" ]] && \
       sed \
         -i \
-        "s%${_setuptools_pattern}%destdir=/%g" \
+        "s%${_pattern}%destdir=/%g" \
         "${_tmpdir}/PKGBUILD"
   fi
 }
