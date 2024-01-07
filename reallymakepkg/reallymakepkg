@@ -121,7 +121,7 @@ _python_quirks() {
       [[ "${_build_pattern}" != "" ]] && \
         sed \
           -i \
-          "s/${_setuptools_pattern}/destdir=\"\${pkgdir}\"/g" \
+          "s/${_setuptools_pattern}/destdir=\"\/\"/g" \
           "${_tmpdir}/PKGBUILD"
     fi
   fi
