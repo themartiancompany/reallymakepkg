@@ -119,7 +119,7 @@ _python_quirks() {
       [[ "${_build_pattern}" != "" ]] && \
         sed \
           -i \
-          "s/${_setuptools_pattern}/destdir=\"\/\"/g" \
+          "s/${_setuptools_pattern}/destdir=\//g" \
           "${_tmpdir}/PKGBUILD"
     fi
   fi
@@ -148,6 +148,8 @@ _termux_makepkg() {
   cd \
     "${_tmpdir}"
   _termux_flags
+  cat \
+    PKGBUILD
   makepkg \
     "${_args[@]}"
   [[ $? -eq 0 ]] && \
