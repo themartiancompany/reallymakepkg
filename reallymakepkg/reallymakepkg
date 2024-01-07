@@ -126,7 +126,7 @@ _build_quirk() {
     [[ "${_pattern}" != "" ]] && \
       sed \
         -i \
-        "s%${_pattern}%destdir=/%g" \
+        "s%${_pattern}%destdir=pkgdir%g" \
         "${_tmpdir}/PKGBUILD"
   fi
 }
