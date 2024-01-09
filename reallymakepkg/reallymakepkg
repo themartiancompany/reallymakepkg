@@ -122,7 +122,7 @@ _build_quirk() {
         "${_tmpdir}/PKGBUILD" | \
         grep \
           -o \
-          'destdir=[^ ]*terdir[^ ]*')"
+          'destdir=[^ ]*pkgdir[^ ]*')"
     [[ "${_pattern}" != "" ]] && \
       sed \
         -i \
