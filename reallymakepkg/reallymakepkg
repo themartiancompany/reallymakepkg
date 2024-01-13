@@ -99,7 +99,7 @@ _setuptools_quirk() {
         "${_tmpdir}/PKGBUILD" | \
         grep \
           -o \
-          'root=[^ ]*terdir[^ ]*')"
+          'root[^ ]*terdir[^ ]*')"
     [[ "${_pattern}" != "" ]] && \
       echo \
         "INFO: reverting terdir to pkgdir in --root option"
