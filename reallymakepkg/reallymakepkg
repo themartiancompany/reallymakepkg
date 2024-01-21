@@ -35,9 +35,9 @@ _termux_flags() {
   _cflags="-Wno-language-extension-token"
   if [[ \
     ! " ${LDFLAGS} " =~ \
-      '-landroid-shmem -landroid-execinfo' ]] then
+      '-landroid-shmem -landroid-execinfo -landroid-support' ]] then
     export \
-      LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo"
+      LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo -landroid-support"
   fi 
   export \
     CFLAGS="${_cflags} ${CFLAGS}"
