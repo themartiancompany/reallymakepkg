@@ -16,6 +16,18 @@ _reallymakepkg() {
     "${_args[@]}"
 }
 
+# Apply useful hopefully globally innocuous flags
+_flags() {
+  local \
+    _coreutils_flags=()
+  [[ -n "${gl_cv_host_operating_system}" ]] && \
+    _coreutils_flags+=(
+      gl_cv_host_operating_system="$(uname -o)"
+    )
+  export \
+    "${_coreutils_flags[@]}"
+}
+
 # Set C flags for the termux environment
 _termux_flags() {
   if [[ \
@@ -134,8 +146,7 @@ _build_quirk() {
 _python_quirks() {
   local \
     _build_pattern \
-    _flag \
-    _setuptools_pattern
+    _flag
   _is_python_pkg
   if [[ "${_flag}" == "true" ]]; then
     echo \
@@ -168,8 +179,9 @@ _termux_makepkg() {
   cd \
     "${_tmpdir}"
   _termux_flags
+  _flags
   cat \
-    PKGBUILD
+    'PKGBUILD'
   makepkg \
     "${_args[@]}"
   [[ $? -eq 0 ]] && \
