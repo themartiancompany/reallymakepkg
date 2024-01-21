@@ -22,7 +22,9 @@ _flags() {
     _coreutils_flags=()
   [[ -n "${gl_cv_host_operating_system}" ]] && \
     _coreutils_flags+=(
-      gl_cv_host_operating_system="$(uname -o)"
+      gl_cv_host_operating_system="$( \
+        uname \
+	  -o)"
     )
   export \
     "${_coreutils_flags[@]}"
@@ -31,7 +33,11 @@ _flags() {
 # Set C flags for the termux environment
 _termux_flags() {
   local \
+    _glib_flags=() \
     _cflags
+  _glib_flags=(
+    -D__BIONIC__=1
+  )
   _cflags="-Wno-language-extension-token"
   if [[ \
     ! " ${LDFLAGS} " =~ \
@@ -40,7 +46,7 @@ _termux_flags() {
       LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo -landroid-support"
   fi 
   export \
-    CFLAGS="${_cflags} ${CFLAGS}"
+    CFLAGS="${_glib_flags[*]} ${_cflags} ${CFLAGS}"
 }
 
 # Roughly determine if a package contains a Python package
