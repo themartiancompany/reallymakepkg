@@ -66,6 +66,7 @@ _termux_flags() {
   fi 
   export \
     CFLAGS="${_glib_flags[*]} ${_cflags[*]} ${CFLAGS}"
+    CXXFLAGS="${_glib_flags[*]} ${_cflags[*]} ${CXXFLAGS}"
   echo "CFLAGS; ${CFLAGS}"
 }
 
