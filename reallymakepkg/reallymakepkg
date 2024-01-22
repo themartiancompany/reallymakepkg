@@ -31,8 +31,20 @@ _flags() {
 # Set C flags for the termux environment
 _termux_flags() {
   local \
-    _cflags
-  _cflags="-Wno-language-extension-token"
+    _cflags=() \
+    _usr
+  _usr="$( \
+    dirname \
+      "$( \
+        dirname \
+          "$( \
+	    command \
+	      -v \
+	        "cc")")")"
+  _cflags+=(
+    "-Wno-language-extension-token"
+    "-I${_usr}/include/glib-2.0"
+  )
   if [[ \
     ! " ${LDFLAGS} " =~ \
       '-landroid-shmem -landroid-execinfo -landroid-support' ]] then
@@ -40,7 +52,8 @@ _termux_flags() {
       LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo -landroid-support"
   fi 
   export \
-    CFLAGS="${_cflags} ${CFLAGS}"
+    CFLAGS="${_cflags[*]} ${CFLAGS}"
+  echo "CFLAGS; ${CFLAGS}"
 }
 
 # Roughly determine if a package contains a Python package
