@@ -22,7 +22,9 @@ _flags() {
     _coreutils_flags=()
   [[ -n "${gl_cv_host_operating_system}" ]] && \
     _coreutils_flags+=(
-      gl_cv_host_operating_system="$(uname -o)"
+      gl_cv_host_operating_system="$( \
+        uname \
+	  -o)"
     )
   export \
     "${_coreutils_flags[@]}"
@@ -32,6 +34,7 @@ _flags() {
 _termux_flags() {
   local \
     _cflags=() \
+    _glib_flags=() \
     _usr
   _usr="$( \
     dirname \
@@ -41,18 +44,26 @@ _termux_flags() {
 	    command \
 	      -v \
 	        "cc")")")"
-  _cflags+=(
+  _cflags=(
     "-Wno-language-extension-token"
+  )
+  _ldflags=(
+    -landroid-shmem
+    -landroid-execinfo
+    -landroid-support
+  )
+  _glib_flags=(
+    -D__BIONIC__=1
     "-I${_usr}/include/glib-2.0"
   )
   if [[ \
     ! " ${LDFLAGS} " =~ \
-      '-landroid-shmem -landroid-execinfo -landroid-support' ]] then
+      "${_ldflags[*]}" ]] then
     export \
-      LDFLAGS="${LDFLAGS} -landroid-shmem -landroid-execinfo -landroid-support"
+      LDFLAGS="${LDFLAGS} ${_ldflags[*]}"
   fi 
   export \
-    CFLAGS="${_cflags[*]} ${CFLAGS}"
+    CFLAGS="${_glib_flags[*]} ${_cflags[*]} ${CFLAGS}"
   echo "CFLAGS; ${CFLAGS}"
 }
 
