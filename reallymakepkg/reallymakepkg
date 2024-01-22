@@ -55,6 +55,7 @@ _termux_flags() {
   _glib_flags=(
     -D__BIONIC__=1
     "-I${_usr}/include/glib-2.0"
+    "-I${_usr}/lib/glib-2.0/include"
   )
   if [[ \
     ! " ${LDFLAGS} " =~ \
