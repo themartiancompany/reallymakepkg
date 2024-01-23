@@ -33,20 +33,43 @@ _flags() {
 # Set C flags for the termux environment
 _termux_flags() {
   local \
+    _cc="" \
     _cflags=() \
+    _err_flags=() \
     _glib_flags=() \
+    _ldflags=() \
+    _err \
     _usr
+  _cc="$( \
+    command \
+      -v \
+      "$( \
+        stat \
+         -c="%N"
+         "$( \
+           command \
+             -v \
+             "cc")"
+         awk \
+           '{print $3}')")"
   _usr="$( \
     dirname \
       "$( \
         dirname \
-          "$( \
-	    command \
-	      -v \
-	        "cc")")")"
-  _cflags=(
-    "-Wno-language-extension-token"
+          "${_cc}")")"
+  _err_prefix="-Wno-"
+  [[ "${_cc}" == *"gcc"]] && \
+    _err_prefix="${_err_prefix}error-"
+  _err_flags=(
+    "implicit-function-declaration"
+    "language-extension-token"
   )
+  for _err \
+    in "${_err_flags[@]}"; do
+    _cflags+=(
+      "${_err_prefix}${_err}"
+    )
+  done
   _ldflags=(
     -landroid-shmem
     -landroid-execinfo
