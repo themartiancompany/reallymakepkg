@@ -45,11 +45,11 @@ _termux_flags() {
       -v \
       "$( \
         stat \
-         -c="%N"
+         -c="%N" \
          "$( \
            command \
              -v \
-             "cc")"
+             "cc")" | \
          awk \
            '{print $3}')")"
   _usr="$( \
@@ -58,7 +58,7 @@ _termux_flags() {
         dirname \
           "${_cc}")")"
   _err_prefix="-Wno-"
-  [[ "${_cc}" == *"gcc"]] && \
+  [[ "${_cc}" == *"gcc" ]] && \
     _err_prefix="${_err_prefix}error-"
   _err_flags=(
     "implicit-function-declaration"
