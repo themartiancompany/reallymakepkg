@@ -63,6 +63,7 @@ _termux_flags() {
   _err_flags=(
     "implicit-function-declaration"
     "language-extension-token"
+    "incompatible-pointer-types"
   )
   for _err \
     in "${_err_flags[@]}"; do
