@@ -147,7 +147,7 @@ _is_setuptools_pkg() {
     echo \
       " ${_pkgname[*]} " | \
       grep \
-        " python2-" )"
+        " python2-setuptools" )"
   if [[ "${_py2_flag}" != "" ]]; then
     _flag=""
   fi
