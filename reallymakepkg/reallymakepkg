@@ -63,7 +63,8 @@ _termux_flags() {
   _err_flags=(
     "implicit-function-declaration"
     "language-extension-token"
-    "incompatible-pointer-types"
+    # "incompatible-pointer-types"
+    # "overflow"
   )
   for _err \
     in "${_err_flags[@]}"; do
@@ -128,12 +129,28 @@ _is_python_pkg() {
 }
 
 _is_setuptools_pkg() {
+  local \
+    _pkgname=() \
+    _py2_flag
+  _pkgname=(
+    $(source \
+        "${_tmpdir}/PKGBUILD" && \
+      echo \
+        "${pkgname[@]}"))
   _flag="$( \
     cat \
       "${_tmpdir}/PKGBUILD" | \
       grep \
         -o \
-        'setup.py')"
+	'setup.py')"
+  _py2_flag="$( \
+    echo \
+      " ${_pkgname[*]} " | \
+      grep \
+        " python2-" )"
+  if [[ "${_py2_flag}" != "" ]]; then
+    _flag=""
+  fi
 }
 
 _is_build_pkg() {
