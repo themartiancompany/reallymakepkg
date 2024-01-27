@@ -148,9 +148,14 @@ _is_build_pkg() {
   for _pkg \
     in "${_makedepends[@]}"; do
     if [[ "${_pkg}" == "python-build" ]]; then
-      _flag=true
+      _flag="true"
       break
     fi
+    if [[ "${_pkg}" == "python-setuptools-scm" ]]; then
+      _flag=""
+      break
+    fi
+
   done
 }
 
