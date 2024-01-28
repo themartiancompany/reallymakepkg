@@ -131,6 +131,7 @@ _is_python_pkg() {
 _is_setuptools_pkg() {
   local \
     _pkgname=() \
+    _it_flag \
     _py2_flag
   _pkgname=(
     $(source \
@@ -148,9 +149,20 @@ _is_setuptools_pkg() {
       " ${_pkgname[*]} " | \
       grep \
         " python2-" )"
-  if [[ "${_py2_flag}" != "" ]]; then
+  _it_flag="$( \
+    echo \
+      " ${_pkgname[*]} " | \
+      grep \
+        " python-setuptools" )"
+  if \
+    [[ "${_py2_flag}" != "" ]]; then
     _flag=""
   fi
+  # if \
+  #   [[ "${_it_flag}" != "" ]]; then
+  #   _flag=""
+  # fi
+
 }
 
 _is_build_pkg() {
@@ -169,11 +181,12 @@ _is_build_pkg() {
       _flag="true"
       break
     fi
-    if [[ "${_pkg}" == "python-setuptools-scm" ]]; then
+    if \
+      [[ "${_pkg}" == "python-setuptools-scm" ]] && \
+      [[ "${_pkg}" != "python-jaraco.context" ]]; then
       _flag=""
       break
     fi
-
   done
 }
 
