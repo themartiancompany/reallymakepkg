@@ -158,24 +158,30 @@ _is_setuptools_pkg() {
     [[ "${_py2_flag}" != "" ]]; then
     _flag=""
   fi
-  # if \
-  #   [[ "${_it_flag}" != "" ]]; then
-  #   _flag=""
-  # fi
-
+  if \
+    [[ "${_it_flag}" != "" ]]; then
+    _flag=""
+  fi
 }
 
 _is_build_pkg() {
   local \
     _makedepends=() \
     _pkg \
-  _flag=""
+    _pkgname \
+    _flag=""
   _makedepends=(
     $(source \
         "${_tmpdir}/PKGBUILD" && \
       echo \
-        "${makedepends[@]}"))
-  for _pkg \
+        "${makedepends[@]}")
+  )
+  _pkgname=(
+    $(source \
+        "${_tmpdir}/PKGBUILD" && \
+      echo \
+        "${pkgname[@]}"))
+ for _pkg \
     in "${_makedepends[@]}"; do
     if [[ "${_pkg}" == "python-build" ]]; then
       _flag="true"
@@ -183,7 +189,8 @@ _is_build_pkg() {
     fi
     if \
       [[ "${_pkg}" == "python-setuptools-scm" ]] && \
-      [[ "${_pkg}" != "python-jaraco.context" ]]; then
+      [[ " ${_pkgname[*]} " != *" python-jaraco.context "* ]] && \
+      [[ " ${_pkgname[*]} " != *" python-tomli "* ]]; then
       _flag=""
       break
     fi
