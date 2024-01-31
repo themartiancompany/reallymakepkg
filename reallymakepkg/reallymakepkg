@@ -72,10 +72,14 @@ _termux_flags() {
       "${_err_prefix}${_err}"
     )
   done
+  _cflags+=(
+    -I"${_usr}/include/libelf.h"
+  )
   _ldflags=(
     -landroid-shmem
     -landroid-execinfo
     -landroid-support
+    -lelf
   )
   _glib_flags=(
     -D__BIONIC__=1
