@@ -183,7 +183,7 @@ _get_usr() {
     "$( \
       dirname \
         "$( \
-	  _get_cc)"
+	  _get_cc)")"
 }
 
 # Set C flags for the termux environment
