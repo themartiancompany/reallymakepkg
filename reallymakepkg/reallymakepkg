@@ -569,7 +569,7 @@ usage: $(_get "app" "name") [options] [makepkg options]
   options:
      -g (--glibc)         Whether to build using glibc in
                           Termux environments.
-		          Default: '$(_get "termux" "glibc")}'
+		          Default: '$(_get "termux" "glibc")'
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
