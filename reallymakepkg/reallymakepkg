@@ -2,6 +2,140 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
+_globals() {
+  set \
+    -e \
+    -u
+  shopt \
+    -s \
+      extglob
+  
+  # Control the environment
+  umask \
+    0022
+  export \
+    LC_ALL="C.UTF-8"
+  # LC_ALL=C.UTF-8, unlike LC_ALL=C,
+  # does not override LANGUAGE.
+  # See 
+  # https://sourceware.org/bugzilla/show_bug.cgi?id=16621
+  # and 
+  # https://savannah.gnu.org/bugs/?62815
+  [[ -v LANGUAGE ]] && \
+    unset \
+      LANGUAGE
+  [[ -v SOURCE_DATE_EPOCH ]] || \
+    printf \
+      -v SOURCE_DATE_EPOCH \
+      '%(%s)T' -1
+  export \
+    SOURCE_DATE_EPOCH
+  
+  # Get script path
+  _path="$( \
+    export \
+      _OLDPWD="$(pwd)" && \
+    cd \
+      "$( \
+	dirname \
+          "${BASH_SOURCE[0]}")" && \
+    echo \
+      "$(pwd)" && \
+    cd \
+      "${_OLDPWD}" && \
+    unset \
+      _OLDPWD)"
+  unset \
+    _OLDPWD
+
+  # Set application name from the script's file name
+  app_name="${0##*/}"
+}
+
+_global_variables() {
+  [[ -v LDFLAGS ]] || \
+    LDFLAGS=""
+  [[ -v CFLAGS ]] || \
+   CFLAGS=""
+  [[ -v CXXFLAGS ]] || \
+   CXXFLAGS=""
+termux_glibc=""
+  quiet=""
+}
+
+# Show a WARNING message
+# $1: message string
+_msg_warning() {
+  local \
+    _msg="${1}"
+  printf \
+    '[%s] WARNING: %s\n' \
+    "${app_name}" \
+    "${_msg}" >&2
+}
+
+# Show an ERROR message then exit with status
+# $1: message string
+# $2: exit code number (with 0 does not exit)
+_msg_error() {
+  local \
+    _msg="${1}" \
+    _error=${2}
+  printf \
+    '[%s] ERROR: %s\n' \
+    "${app_name}" \
+    "${_msg}" >&2
+  if (( _error > 0 )); then
+    exit "${_error}"
+  fi
+}
+
+# Sets object string attributes
+# $1: object
+# $2: an object string attribute
+# $3: a value
+_set() {
+  local \
+    _obj="${1}" \
+    _var="${2}" \
+    _value="${3}" \
+    _type
+  printf \
+    -v "${_obj}_${_var}" \
+    "${_value}"
+}
+
+# Returns an attribute value for a 
+# given object
+# $1: an object
+# $2: an object attribute
+_get() {
+  local \
+    _obj="${1}" \
+    _var="${2}" \
+    _msg \
+    _ref \
+    _type
+  _ref="${_obj}_${_var}[@]"
+  _type="$( \
+    declare \
+      -p "${_obj}_${_var}")"
+  [[ "${_type}" == *"declare: "*": not found" ]] && \
+    _msg=(
+      "Attribute '${_var}' is not defined"
+      "for object '${_obj}'") && \
+    _msg_error \
+      "${_msg[*]}" \
+      1
+  [[ "${_type}" == "declare -A "* ]] && \
+    echo \
+      "${_image[${_var}]}" && \
+    return
+  printf \
+    "%s\n" \
+    "${!_ref}"
+}
+
 # System-independent makepkg
 _reallymakepkg() {
   local \
@@ -20,7 +154,7 @@ _reallymakepkg() {
 _flags() {
   local \
     _coreutils_flags=()
-  [[ -n "${gl_cv_host_operating_system}" ]] && \
+  [[ -v gl_cv_host_operating_system ]] || \
     _coreutils_flags+=(
       gl_cv_host_operating_system="$( \
         uname \
@@ -30,6 +164,28 @@ _flags() {
     "${_coreutils_flags[@]}"
 }
 
+_get_cc() {
+  command \
+    -v \
+    "$( \
+      stat \
+       -c="%N" \
+       "$( \
+         command \
+           -v \
+           "cc")" | \
+       awk \
+         '{print $3}')"
+}
+
+_get_usr() {
+  dirname \
+    "$( \
+      dirname \
+        "$( \
+	  _get_cc)"
+}
+
 # Set C flags for the termux environment
 _termux_flags() {
   local \
@@ -37,26 +193,15 @@ _termux_flags() {
     _cflags=() \
     _err_flags=() \
     _glib_flags=() \
+    _glibc_flags=() \
+    _glibc_flag=true \
     _ldflags=() \
     _err \
     _usr
   _cc="$( \
-    command \
-      -v \
-      "$( \
-        stat \
-         -c="%N" \
-         "$( \
-           command \
-             -v \
-             "cc")" | \
-         awk \
-           '{print $3}')")"
+    _get_cc)"
   _usr="$( \
-    dirname \
-      "$( \
-        dirname \
-          "${_cc}")")"
+    _get_usr)"
   _err_prefix="-Wno-"
   [[ "${_cc}" == *"gcc" ]] && \
     _err_prefix="${_err_prefix}error-"
@@ -72,10 +217,34 @@ _termux_flags() {
       "${_err_prefix}${_err}"
     )
   done
-  _ldflags=(
-    -landroid-shmem
-    -landroid-execinfo
-    -landroid-support
+  _cflags+=(
+    -I"${_usr}/include/libelf.h"
+  )
+  _glibc_flags=(
+    -I"${_usr}/glibc/include/epoll.h"
+  )
+  [[ "$(_get \
+	  "termux" \
+	  "glibc")" == "false" ]] && \
+    _ldflags+=(
+      -landroid-shmem
+      -landroid-execinfo
+      -landroid-support
+      -landroid-posix-semaphore
+      -landroid-sysv-semaphore
+    )
+  [[ "$(_get \
+	  "termux" \
+	  "glibc")" == "true" ]] && \
+    _ldflags+=(
+      -L"${_usr}/glibc/lib/libc.a"
+      -L"${_usr}/glibc/lib"
+    ) && \
+    _cflags+=(
+      ${_glibc_flags[@]}
+    )
+  _ldflags+=(
+    -lelf
   )
   _glib_flags=(
     -D__BIONIC__=1
@@ -83,16 +252,21 @@ _termux_flags() {
     "-I${_usr}/lib/glib-2.0/include"
     "-I${_usr}/include"
   )
-  if [[ \
-    ! " ${LDFLAGS} " =~ \
-      "${_ldflags[*]}" ]] then
-    export \
-      LDFLAGS="${LDFLAGS} ${_ldflags[*]}"
-  fi 
+  for _flag \
+    in "${_ldflags[*]}"; do
+    if \
+      [[ \
+        ! " ${LDFLAGS} " =~ \
+          "${_flag}" ]]; then
+      export \
+        LDFLAGS="${LDFLAGS} ${_flag}"
+    fi 
+  done
   export \
     CFLAGS="${_glib_flags[*]} ${_cflags[*]} ${CFLAGS}"
     CXXFLAGS="${_glib_flags[*]} ${_cflags[*]} ${CXXFLAGS}"
-  echo "CFLAGS; ${CFLAGS}"
+  _msg_info \
+    "CFLAGS: ${CFLAGS}"
 }
 
 # Roughly determine if a package contains a Python package
@@ -131,6 +305,7 @@ _is_python_pkg() {
 _is_setuptools_pkg() {
   local \
     _pkgname=() \
+    _it_flag \
     _py2_flag
   _pkgname=(
     $(source \
@@ -147,8 +322,18 @@ _is_setuptools_pkg() {
     echo \
       " ${_pkgname[*]} " | \
       grep \
-        " python2-setuptools" )"
-  if [[ "${_py2_flag}" != "" ]]; then
+        " python2-" )"
+  _it_flag="$( \
+    echo \
+      " ${_pkgname[*]} " | \
+      grep \
+        " python-setuptools" )"
+  if \
+    [[ "${_py2_flag}" != "" ]]; then
+    _flag=""
+  fi
+  if \
+    [[ "${_it_flag}" != "" ]]; then
     _flag=""
   fi
 }
@@ -157,16 +342,30 @@ _is_build_pkg() {
   local \
     _makedepends=() \
     _pkg \
-  _flag=""
+    _pkgname \
+    _flag=""
   _makedepends=(
     $(source \
         "${_tmpdir}/PKGBUILD" && \
       echo \
-        "${makedepends[@]}"))
-  for _pkg \
+        "${makedepends[@]}")
+  )
+  _pkgname=(
+    $(source \
+        "${_tmpdir}/PKGBUILD" && \
+      echo \
+        "${pkgname[@]}"))
+ for _pkg \
     in "${_makedepends[@]}"; do
     if [[ "${_pkg}" == "python-build" ]]; then
-      _flag=true
+      _flag="true"
+      break
+    fi
+    if \
+      [[ "${_pkg}" == "python-setuptools-scm" ]] && \
+      [[ " ${_pkgname[*]} " != *" python-jaraco.context "* ]] && \
+      [[ " ${_pkgname[*]} " != *" python-tomli "* ]]; then
+      _flag=""
       break
     fi
   done
@@ -177,8 +376,8 @@ _setuptools_quirk() {
     _pattern
   _is_setuptools_pkg 
   if [[ "${_flag}" != "" ]]; then
-    echo \
-      "INFO: detected as setuptools pkg"
+    _msg_info \
+      "Detected as setuptools pkg"
     _pattern="$( \
       cat \
         "${_tmpdir}/PKGBUILD" | \
@@ -186,8 +385,8 @@ _setuptools_quirk() {
           -o \
           'root=[^ ]*terdir[^ ]*')"
     [[ "${_pattern}" != "" ]] && \
-      echo \
-        "INFO: reverting terdir to pkgdir in --root option"
+      _msg_info \
+        "reverting 'terdir' to 'pkgdir' in --root option"
       sed \
         -i \
         "s/${_pattern}/root=\"\${pkgdir}\"/g" \
@@ -200,8 +399,8 @@ _build_quirk() {
     _pattern
   _is_build_pkg
   if [[ "${_flag}" == "true" ]]; then
-    echo \
-      "INFO: Using / instead of terdir in build module's --destdir"
+    _msg_info \
+      "Using 'pkgdir' instead of 'terdir' in build module's --destdir"
     _pattern="$( \
       cat \
         "${_tmpdir}/PKGBUILD" | \
@@ -222,8 +421,8 @@ _python_quirks() {
     _flag
   _is_python_pkg
   if [[ "${_flag}" == "true" ]]; then
-    echo \
-      "INFO: detected as python pkg"
+    _msg_info \
+      "detected as python pkg"
     _build_quirk
     _setuptools_quirk
   fi
@@ -268,8 +467,143 @@ _termux_makepkg() {
     "${OLDPWD}"
 }
 
+# Reassign an object variable
+# if an override variable is defined;
+# otherwise it defaults
+# to an input default.
+# $1: object
+# $2: variable
+# $3: default value
+_set_override() {
+  local \
+    _obj="${1}" \
+    _var="${2}" \
+    _default="${3}"
+  if [[ -v "override_${_obj}_${_var}" ]]; then
+    _set \
+      "${_obj}" \
+      "${_var}" \
+      "$( \
+        _get \
+	  "override_${obj}" \
+          "${_var}")"
+  elif [[ -z \
+	    "$( \
+	      _get \
+	        "${_obj}" \
+                "${_var}")" ]]; then
+    _set \
+      "${_obj}" \
+      "${_var}" \
+      "${_default}"
+  fi
+}
+
+# Re-assign an object variable
+# pointing to a path if an override variable
+# is defined, otherwise it defaults to an input path
+# $1: object
+# $2: variable
+# $3: value (a path)
+_override_path() {
+  local \
+    _obj="${1}" \
+    _var="${2}" \
+    _value="${3}" \
+    _path
+  _path="$( \
+    realpath \
+      -q -- \
+      "${_value}" || \
+      true)"
+  [[ "${_path}" == "" ]] && \
+    _msg_error \
+      "${_value} is not a valid path." \
+      1
+  _set_override \
+    "${_obj}" \
+    "${_var}" \
+    "${_value}"
+  _set \
+    "${_obj}" \
+    "${_var}" \
+    "$( \
+      realpath -- \
+        "$(_get \
+	  "${_obj}" \
+          "${_var}")")"
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "termux" \
+    "glibc" \
+    "false"
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      usage_text << \
+        ENDUSAGETEXT || true
+usage: $(_get "app" "name") [options] [makepkg options]
+  options:
+     -g (--glibc)         Whether to build using glibc in
+                          Termux environments.
+		          Default: '$(_get "termux" "glibc")}'
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  printf \
+    '%s\n' \
+    "$( \
+      _get \
+        "usage" \
+	"text")"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+
+while \
+  getopts \
+    'g:glibc:vh?' \
+    arg; do
+  case \
+    "${arg}" in
+    g|glibc) override_termux_glibc="true" ;;
+    v) override_quiet="n" ;;
+    h|?) _usage \
+	    0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0
+    _usage \
+      1
+    ;;
+  esac
+done
+
+shift \
+  $((OPTIND - 1))
+
 _args=(
-  "$@")
+  "$@"
+)
 
 _reallymakepkg \
   "${_args[@]}"
