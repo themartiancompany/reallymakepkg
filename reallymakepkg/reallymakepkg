@@ -37,6 +37,8 @@ _termux_flags() {
     _cflags=() \
     _err_flags=() \
     _glib_flags=() \
+    _glibc_flags=() \
+    _glibc_flag=true \
     _ldflags=() \
     _err \
     _usr
@@ -75,10 +77,24 @@ _termux_flags() {
   _cflags+=(
     -I"${_usr}/include/libelf.h"
   )
-  _ldflags=(
-    -landroid-shmem
-    -landroid-execinfo
-    -landroid-support
+  _glibc_flags=(
+    -I"${_usr}/glibc/include/epoll.h"
+  )
+  [[ "${_glibc_flag}" == "false" ]] && \
+    _ldflags+=(
+      -landroid-shmem
+      -landroid-execinfo
+      -landroid-support
+    )
+  [[ "${_glibc_flag}" == "true" ]] && \
+    _ldflags+=(
+      -L"${_usr}/glibc/lib/libc.a"
+      -L"${_usr}/glibc/lib"
+    ) && \
+    _cflags+=(
+      ${_glibc_flags[@]}
+    )
+  _ldflags+=(
     -lelf
   )
   _glib_flags=(
@@ -87,9 +103,10 @@ _termux_flags() {
     "-I${_usr}/lib/glib-2.0/include"
     "-I${_usr}/include"
   )
-  if [[ \
-    ! " ${LDFLAGS} " =~ \
-      "${_ldflags[*]}" ]] then
+  if \
+    [[ \
+      ! " ${LDFLAGS} " =~ \
+        "${_ldflags[*]}" ]]; then
     export \
       LDFLAGS="${LDFLAGS} ${_ldflags[*]}"
   fi 
