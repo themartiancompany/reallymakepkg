@@ -431,7 +431,7 @@ _is_setuptools_pkg() {
 	'setup.py')"
   _py2_flag="$( \
     echo \
-      " ${_pkgname} " | \
+      " ${_pkgname[*]} " | \
       grep \
         " python2-" )"
   _it_flag="$( \
@@ -560,7 +560,6 @@ _is_glib_pkg() {
   done
 }
 
-
 _glib_quirks() {
   local \
     _build_pattern \
@@ -576,6 +575,10 @@ _glib_quirks() {
   fi
 }
 
+_libc_quirks() {
+  msg_info \
+    "mmmm"
+}
 
 # Termux makepkg
 # $@:makepkg args
@@ -601,6 +604,7 @@ _termux_makepkg() {
     "${_tmpdir}"
   _termux_flags
   _flags
+  _libc_quirks
   _show_config
   makepkg \
     "${_args[@]}"
