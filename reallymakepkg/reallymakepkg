@@ -854,19 +854,23 @@ _printf() {
 # Colorized Display function
 _sho() {
   local \
-    _text="${1}"
+    _text="${1}" \
+    _pygmentize
+  _pygmentize="$( \
+    command \
+      -v \
+      "pygmentize" || \
+    command \
+      -v \
+      "pygmentize2")"
   shift
   _pygmentize_opts=(
     "$@"
   )
-  [[ \
-    $( \
-      command \
-        -v \
-	  "pygmentize") != "" ]] && \
+  [[ "${_pygmentize}" != "" ]] && \
     echo \
       "${_text}" | 
-      pygmentize \
+      "${_pygmentize}" \
         "${_pygmentize_opts[@]}" && \
     return
   printf \
