@@ -474,6 +474,8 @@ _is_setuptools_pkg() {
       " ${_pkgname[*]} " | \
       grep \
         " python2-" )"
+  _msg_info \
+    "Python 2 flag: ${_py2_flag}"
   _it_flag="$( \
     echo \
       " ${_pkgname[*]} " | \
