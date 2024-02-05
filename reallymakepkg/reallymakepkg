@@ -584,8 +584,7 @@ _libc_quirks() {
 # $@:makepkg args
 _termux_makepkg() {
   local \
-    _args=() \
-    _pypattern
+    _args=()
   _args=(
     "$@")
   _tmpdir="$( \
