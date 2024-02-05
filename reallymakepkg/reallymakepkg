@@ -140,7 +140,7 @@ _get() {
       1
   [[ "${_type}" == "declare -A "* ]] && \
     echo \
-      "${_image[${_var}]}" && \
+      "${_obj[${_var}]}" && \
     return
   printf \
     "%s\n" \
@@ -277,6 +277,24 @@ _termux_bionic_flags() {
 
 }
 
+_termux_auto_flags() {
+  local \
+    _arch \
+    _libc="bionic"
+  _arch="$( \
+    uname \
+      -m)"
+  [[ "${_arch}" == 'armv7l' ]] && \
+    _libc="glibc" 
+  _set \
+    "termux" \
+    "libc" \
+    "${_libc}"
+  _termux"$( \
+    _get "termux"
+         "libc")"_flags
+}
+
 # Set glibc flags
 _termux_glibc_flags() {
   _ldflags+=(
@@ -339,6 +357,19 @@ _termux_flags() {
   export \
     CFLAGS+=" ${_cflags[*]}" \
     CXXFLAGS+=" ${_cflags[*]}"
+}
+
+_recipe_parse() {
+  local \
+    _obj="${1}" \
+    _out="${2}"
+
+    $(source \
+        "${_tmpdir}/PKGBUILD" && \
+  
+      echo \
+        "${pkgname[@]}"))
+
 }
 
 # Roughly determine if a package contains a Python package
@@ -655,7 +686,7 @@ _set_overrides() {
   _set_override \
     "termux" \
     "libc" \
-    "bionic"
+    "auto"
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
