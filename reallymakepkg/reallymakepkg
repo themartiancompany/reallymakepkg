@@ -69,9 +69,13 @@ _global_variables() {
 # Show an INFO message
 # $1: message string
 _msg_info() {
-    local _msg="${1}"
-    [[ "${quiet}" == "y" ]] || \
-      printf '[%s] INFO: %s\n' "${app_name}" "${_msg}"
+  local \
+    _msg="${1}"
+  [[ "${quiet}" == "y" ]] || \
+    _printf \
+      '[%s] INFO: %s\n' \
+      "${app_name}" \
+      "${_msg}"
 }
 
 # Show a WARNING message
@@ -79,7 +83,7 @@ _msg_info() {
 _msg_warning() {
   local \
     _msg="${1}"
-  printf \
+  _printf \
     '[%s] WARNING: %s\n' \
     "${app_name}" \
     "${_msg}" >&2
@@ -92,7 +96,7 @@ _msg_error() {
   local \
     _msg="${1}" \
     _error=${2}
-  printf \
+  _printf \
     '[%s] ERROR: %s\n' \
     "${app_name}" \
     "${_msg}" >&2
@@ -117,6 +121,33 @@ _set() {
     "${_value}"
 }
 
+# Returns type ('string', 'list', 'dict') given
+# its name
+# $1: an object
+_get_type() {
+  local \
+    _obj="${1}" \
+    _type="string"
+  _type="$( \
+    declare \
+      -p \
+        "${_obj}" 2>&1)"
+  [[ \
+    "${_type}" == \
+    *"declare:"*"${_obj}"*": not found" ]] && \
+    _type="undefined"
+  [[ \
+    "${_type}" == \
+    "declare -A "* ]] && \
+    _type="dict"
+  [[ \
+    "${_type}" == \
+    "typeset -a"* ]] && \
+    _type="array"
+  echo \
+    "${_type}"
+}
+
 # Returns an attribute value for a 
 # given object
 # $1: an object
@@ -127,20 +158,21 @@ _get() {
     _var="${2}" \
     _msg \
     _ref \
-    _type
-
-  _ref="${_obj}_${_var}[@]"
+    _type \
+    _target
+  _target="${_obj}_${_var}"
+  _ref="${_target}[@]"
   _type="$( \
-    declare \
-      -p "${_obj}_${_var}")"
-  [[ "${_type}" == *"declare: "*": not found" ]] && \
+    _get_type \
+      "${_target}")"
+  [[ "${_type}" == "undefined" ]] && \
     _msg=(
       "Attribute '${_var}' is not defined"
       "for object '${_obj}'") && \
     _msg_error \
       "${_msg[*]}" \
       1
-  [[ "${_type}" == "declare -A "* ]] && \
+  [[ "${_type}" == "dict" ]] && \
     echo \
       "${_obj[${_var}]}" && \
     return
@@ -254,11 +286,7 @@ _termux_glib_flags() {
     "-I$(_get_usr)/lib/glib-2.0/include"
     "-I$(_get_usr)/include"
   )
-  [[ \
-    "$( \
-      _get \
-	"termux" \
-	"glib")" == "true" ]] && \
+  [[ "$(_is_glib_pkg)" == "true" ]] && \
     _cflags+=(
       "${_glib_flags[*]}"
     )
@@ -294,9 +322,9 @@ _termux_auto_flags() {
     "termux" \
     "libc" \
     "${_libc}"
-  _termux"$( \
-    _get "termux"
-         "libc")"_flags
+  "_termux_$( \
+    _get "termux" \
+         "libc")_flags"
 }
 
 # Set glibc flags
@@ -369,19 +397,30 @@ _recipe_get() {
     _obj="${1}" \
     _value \
     _ref \
-    _type
+    _type \
+    _msg
   _ref="${_obj}[@]"
   _value="$( \
     source \
       "${_tmpdir}/PKGBUILD" && \
-     _type="$( \
-      declare \
-        -p "${_obj}")" && \
-      if [[ "${_type}" == "typeset"* ]]; then
+    _type="$( \
+      _get_type \
+        "${_obj}")" && \
+    if \
+      [[ "${_type}" == "string" ]] || \
+      [[ "${_type}" == "array" ]]; then
         printf \
           "%s\n" \
-            "${!_ref}"
-      fi)"
+            "${!_ref}";
+    elif [[ "${_type}" == "undefined" ]]; then
+      _msg=( \
+	'PKGBUILD seems not to contain'
+	"the '${_obj} variable")
+    fi)"
+  if [[ "${_msg[*]}" != "" ]]; then
+    _msg_info \
+      "${_msg[*]}"
+  fi
   echo \
     "${_value}"
 }
@@ -392,10 +431,11 @@ _is_python_pkg() {
   local \
     _pkg
   _flag=""
+  _provides=( $( \
+    _recipe_get \
+      "provides"))
   for _pkg \
-    in $( \
-      _recipe_get \
-        "pkgname"); do
+    in "${_provides[@]}"; do
     if [[ "${_pkg}" == "python"*"-"* ]]; then
       _flag=true
       break
@@ -541,7 +581,7 @@ _is_glib_pkg() {
     _makedepends=() \
     _pkg \
     _pkgname \
-    _flag=""
+    _flag="false"
   _makedepends=( $( \
     _recipe_get \
       "makedepends")
@@ -560,26 +600,11 @@ _is_glib_pkg() {
   done
 }
 
-_glib_quirks() {
-  local \
-    _build_pattern \
-    _flag
-  _is_glib_pkg
-  if [[ "${_flag}" == "true" ]]; then
-    _msg_info \
-      "detected as glib pkg"
-    _set \
-      "termux" \
-      "glib" \
-      "true"
-  fi
-}
-
 _libc_quirks() {
   local \
     _pattern
   _pattern="pkgname=[,+]="
-  msg_info \
+  _msg_info \
     "temporary sigh"
 }
 
@@ -683,9 +708,10 @@ _override_path() {
     "${_var}" \
     "$( \
       realpath -- \
-        "$(_get \
-	  "${_obj}" \
-          "${_var}")")"
+        "$( \
+	  _get \
+	    "${_obj}" \
+            "${_var}")")"
 }
 
 # Set defaults and, if present, overrides
@@ -695,6 +721,10 @@ _set_overrides() {
     "termux" \
     "libc" \
     "auto"
+  _set_override \
+    "termux" \
+    "glib" \
+    "false"
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
@@ -751,7 +781,7 @@ _show_config() {
       '%(%FT%R%z)T' \
       "${SOURCE_DATE_EPOCH}"
   _msg_info "${app_name} configuration settings"
-  _msg_info "                    glibc:   $(_get "termux" "glibc")"
+  _msg_info "                     libc:   $(_get "termux" "libc")"
   _msg_info "                     arch:   $(uname -m)"
   _msg_info "                       cc:   $(_get_cc)"
   _msg_info "                 CPPFLAGS:   "
@@ -765,8 +795,48 @@ _show_config() {
   _msg_info ""
   _msg_info "      PKGBUILD:"
   _msg_info ""
-  _msg_info "$(cat 'PKGBUILD')"
+  _sho \
+    "$( \
+      cat \
+        'PKGBUILD')" \
+    "style=emacs"
 
+}
+
+# Colorized print
+_printf() {
+  local \
+    _args=()
+  _args=(
+      "$@"
+  )
+  _sho \
+    "$( \
+      printf \
+        "${_args[@]}")"
+}
+
+# Colorized Display function
+_sho() {
+  local \
+    _text="${1}"
+  shift
+  opts=("$@")
+  [[ \
+    $( \
+      command \
+        -v \
+	  "pygmentize") != "" ]] && \
+    echo \
+      "${_text}" | 
+      pygmentize \
+        -g \
+        -O \
+          style=emacs,${_opts[*]} && \
+    return
+  printf \
+    "%s\n" \
+    "${_text}"
 }
 
 _globals
