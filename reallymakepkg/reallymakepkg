@@ -576,8 +576,11 @@ _glib_quirks() {
 }
 
 _libc_quirks() {
+  local \
+    _pattern
+  _pattern="pkgname=[,+]="
   msg_info \
-    "mmmm"
+    "temporary sigh"
 }
 
 # Termux makepkg
