@@ -127,21 +127,22 @@ _set() {
 _get_type() {
   local \
     _obj="${1}" \
-    _type="string"
-  _type="$( \
+    _type="string" \
+    _declare
+  _declare="$( \
     declare \
       -p \
         "${_obj}" 2>&1)"
   [[ \
-    "${_type}" == \
+    "${_declare}" == \
     *"declare:"*"${_obj}"*": not found" ]] && \
     _type="undefined"
   [[ \
-    "${_type}" == \
+    "${_declare}" == \
     "declare -A "* ]] && \
     _type="dict"
   [[ \
-    "${_type}" == \
+    "${_declare}" == \
     "typeset -a"* ]] && \
     _type="array"
   echo \
@@ -397,8 +398,7 @@ _recipe_get() {
     _obj="${1}" \
     _value \
     _ref \
-    _type \
-    _msg
+    _type
   _ref="${_obj}[@]"
   _value="$( \
     source \
@@ -411,16 +411,16 @@ _recipe_get() {
       [[ "${_type}" == "array" ]]; then
         printf \
           "%s\n" \
-            "${!_ref}";
+          "${!_ref}";
     elif [[ "${_type}" == "undefined" ]]; then
       _msg=( \
 	'PKGBUILD seems not to contain'
 	"the '${_obj} variable")
     fi)"
-  if [[ "${_msg[*]}" != "" ]]; then
-    _msg_info \
-      "${_msg[*]}"
-  fi
+  # if [[ "${_msg[*]}" != "" ]]; then
+  #   _msg_info \
+  #     "${_msg[*]}"
+  # fi
   echo \
     "${_value}"
 }
@@ -430,10 +430,17 @@ _recipe_get() {
 _is_python_pkg() {
   local \
     _pkg
+    _provides=() \
+    _pkgname=()
   _flag=""
   _provides=( $( \
     _recipe_get \
       "provides"))
+  _pkgname=( $( \
+    _recipe_get \
+      "pkgname"))
+  _msg_info \
+    "Packages: ${_pkgname[*]}"
   for _pkg \
     in "${_provides[@]}"; do
     if [[ "${_pkg}" == "python"*"-"* ]]; then
@@ -444,7 +451,7 @@ _is_python_pkg() {
   for _pkg \
     in $( \
       _recipe_get \
-        "provides"); do
+        "pkgname"); do
     if [[ "${_pkg}" == "python"*"-"* ]]; then
       _flag=true
       break
