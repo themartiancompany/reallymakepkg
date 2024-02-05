@@ -245,6 +245,7 @@ _termux_arch_flags() {
     )
 }
 
+# Sets flags to unsure GLib builds
 _termux_glib_flags() {
   local \
     _glib_flags=()
@@ -257,7 +258,7 @@ _termux_glib_flags() {
     "$( \
       _get \
 	"termux" \
-	"libc")" == "glibc" ]] && \
+	"glib")" == "true" ]] && \
     _cflags+=(
       "${_glib_flags[*]}"
     )
@@ -279,6 +280,7 @@ _termux_bionic_flags() {
 
 }
 
+# Tries to guess correct libc
 _termux_auto_flags() {
   local \
     _arch \
@@ -308,7 +310,7 @@ _termux_glibc_flags() {
   ) 
 }
 
-# Add string items to a space-separated stritng
+# Returns a space-separated string plus added input items
 # $1: string
 # $@: string items
 _add_missing_flags() {
