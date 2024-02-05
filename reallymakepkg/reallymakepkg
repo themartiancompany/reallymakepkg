@@ -363,6 +363,7 @@ _termux_flags() {
     CXXFLAGS+=" ${_cflags[*]}"
 }
 
+# Reads a variable from the PKGBUILD
 _recipe_get() {
   local \
     _obj="${1}" \
@@ -385,7 +386,7 @@ _recipe_get() {
     "${_value}"
 }
 
-# Roughly determine if a package
+# Roughly determines if a package
 # contains a Python package
 _is_python_pkg() {
   local \
