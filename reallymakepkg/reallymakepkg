@@ -385,7 +385,8 @@ _recipe_get() {
     "${_value}"
 }
 
-# Roughly determine if a package contains a Python package
+# Roughly determine if a package
+# contains a Python package
 _is_python_pkg() {
   local \
     _pkg
@@ -410,6 +411,8 @@ _is_python_pkg() {
   done
 }
 
+# Roughly determines whether a package is
+# a setuptools package
 _is_setuptools_pkg() {
   local \
     _pkgname=() \
