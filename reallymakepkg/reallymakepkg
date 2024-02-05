@@ -55,11 +55,14 @@ _globals() {
 _global_variables() {
   [[ -v LDFLAGS ]] || \
     LDFLAGS=""
+  [[ -v CPPFLAGS ]] || \
+   CPPFLAGS=""
   [[ -v CFLAGS ]] || \
    CFLAGS=""
   [[ -v CXXFLAGS ]] || \
    CXXFLAGS=""
-termux_glibc=""
+  termux_glib=""
+  termux_libc=""
   quiet=""
 }
 
@@ -154,6 +157,7 @@ _reallymakepkg() {
     _termux_makepkg \
       "${_args[@]}" && \
     return
+  _show_config
   makepkg \
     "${_args[@]}"
 }
@@ -175,15 +179,16 @@ _flags() {
 _get_cc() {
   command \
     -v \
-    "$( \
-      stat \
-       -c="%N" \
-       "$( \
-         command \
-           -v \
-           "cc")" | \
+     $(stat \
+         -c="%N" \
+         "$( \
+           command \
+             -v \
+               "cc")" | \
        awk \
-         '{print $3}')"
+         '{print $3}' | \
+         sed \
+           "s/'//g")
 }
 
 _get_usr() {
@@ -194,87 +199,146 @@ _get_usr() {
 	  _get_cc)")"
 }
 
-# Set C flags for the termux environment
-_termux_flags() {
+_termux_err_flags() {
   local \
-    _cc="" \
-    _cflags=() \
+    _err_prefix="-Wno-" \
     _err_flags=() \
-    _glib_flags=() \
-    _glibc_flags=() \
-    _glibc_flag=true \
-    _ldflags=() \
-    _err \
-    _usr
-  _cc="$( \
-    _get_cc)"
-  _usr="$( \
-    _get_usr)"
-  _err_prefix="-Wno-"
-  [[ "${_cc}" == *"gcc" ]] && \
-    _err_prefix="${_err_prefix}error-"
+    _err
   _err_flags=(
     "implicit-function-declaration"
     "language-extension-token"
+    "register"
     # "incompatible-pointer-types"
     # "overflow"
   )
+  [[ \
+    "$( \
+      basename \
+        "$(_get_cc)")" == *"gcc"* ]] && \
+    _err_prefix="${_err_prefix}" # error-"
   for _err \
     in "${_err_flags[@]}"; do
     _cflags+=(
       "${_err_prefix}${_err}"
     )
   done
-  _cflags+=(
-    -I"${_usr}/include/libelf.h"
-  )
-  _glibc_flags=(
-    -I"${_usr}/glibc/include/epoll.h"
-  )
-  [[ "$(_get \
-	  "termux" \
-	  "glibc")" == "false" ]] && \
-    _ldflags+=(
-      -landroid-shmem
-      -landroid-execinfo
-      -landroid-support
-      -landroid-posix-semaphore
-      -landroid-sysv-semaphore
+}
+
+_termux_arch_flags() {
+  local \
+    _arch
+  _arch="$( \
+    uname \
+      -m)"
+  [[ "${_arch}" == \
+	  "armv7l" ]] && \
+    _glibc_flags+=(
+      -D__arc__=1
+      -D_GNU_SOURCE
     )
-  [[ "$(_get \
-	  "termux" \
-	  "glibc")" == "true" ]] && \
-    _ldflags+=(
-      -L"${_usr}/glibc/lib/libc.a"
-      -L"${_usr}/glibc/lib"
-    ) && \
+  [[ "${_arch}" == \
+	  "arm" ]] && \
     _cflags+=(
-      ${_glibc_flags[@]}
+      -D__arc__=1
     )
+}
+
+_termux_glib_flags() {
+  local \
+    _glib_flags=()
+  _glib_flags=(
+    "-I$(_get_usr)/usr/include/glib-2.0"
+    "-I$(_get_usr)/lib/glib-2.0/include"
+    "-I$(_get_usr)/include"
+  )
+  [[ \
+    "$( \
+      _get \
+	"termux" \
+	"libc")" == "glibc" ]] && \
+    _cflags+=(
+      "${_glib_flags[*]}"
+    )
+}
+
+# Set bionic flags
+_termux_bionic_flags() {
+  _ldflags+=(
+    -landroid-shmem
+    -landroid-execinfo
+    -landroid-support
+    -landroid-posix-semaphore
+    -landroid-sysv-semaphore
+  )
+  _cflags+=(
+    # Required by GLib
+    -D__BIONIC__=1
+  )
+
+}
+
+# Set glibc flags
+_termux_glibc_flags() {
+  _ldflags+=(
+    # -L"${_usr}/glibc/lib/libc.a"
+    # -L"${_usr}/glibc/lib"
+  )
+  _cflags+=(
+    "${_glibc_flags[@]}"
+  ) 
+}
+
+# Add string items to a space-separated stritng
+# $1: string
+# $@: string items
+_add_missing_flags() {
+  local \
+    _oflags="${1}" \
+    _flags=() \
+    _flag
+  shift
+  _flags=(
+    "$@"
+  )
+  for _flag \
+    in "${_flags[*]}"; do
+    if \
+      [[ \
+        ! " ${_oflags} " =~ \
+          "${_flag}" ]]; then
+      _oflags+=("${_flag}")
+    fi 
+  done
+  echo \
+    "${_oflags[*]}"
+}
+
+# Set C flags for the termux environment
+_termux_flags() {
+  local \
+    _cflags=() \
+    _glibc_flags=() \
+    _ldflags=() \
+  _termux_err_flags
+  _termux_arch_flags
+  # _cppflags+=(
+  #   -I"$(_get_usr)/include/libelf.h"
+  # )
+  _termux_"$( \
+    _get \
+      "termux" \
+      "libc")"_flags
+  _termux_glib_flags
   _ldflags+=(
     -lelf
   )
-  _glib_flags=(
-    -D__BIONIC__=1
-    "-I${_usr}/include/glib-2.0"
-    "-I${_usr}/lib/glib-2.0/include"
-    "-I${_usr}/include"
-  )
-  for _flag \
-    in "${_ldflags[*]}"; do
-    if \
-      [[ \
-        ! " ${LDFLAGS} " =~ \
-          "${_flag}" ]]; then
-      export \
-        LDFLAGS="${LDFLAGS} ${_flag}"
-    fi 
-  done
+  LDFLAGS="$( \
+    _add_missing_flags \
+      "${LDFLAGS}" \
+      "${_ldflags[*]}")"
   export \
-    CFLAGS="${_glib_flags[*]} ${_cflags[*]} ${CFLAGS}"
-    CXXFLAGS="${_glib_flags[*]} ${_cflags[*]} ${CXXFLAGS}"
-  _msg_info \
-    "CFLAGS: ${CFLAGS}"
+    CFLAGS+=" ${_cflags[*]}" \
+    CXXFLAGS+=" ${_cflags[*]}"
 }
 
 # Roughly determine if a package contains a Python package
@@ -436,6 +500,50 @@ _python_quirks() {
   fi
 }
 
+_is_glib_pkg() {
+  local \
+    _makedepends=() \
+    _pkg \
+    _pkgname \
+    _flag=""
+  _makedepends=(
+    $(source \
+        "${_tmpdir}/PKGBUILD" && \
+      echo \
+        "${makedepends[@]}")
+  )
+  _pkgname=(
+    $(source \
+        "${_tmpdir}/PKGBUILD" && \
+      echo \
+        "${pkgname[@]}"))
+ for _pkg \
+    in "${_makedepends[@]}" \
+       "${_pkgname[@]}"; do
+    if [[ "${_pkg}" == "glib2" ]]; then
+      _flag="true"
+      break
+    fi
+  done
+}
+
+
+_glib_quirks() {
+  local \
+    _build_pattern \
+    _flag
+  _is_glib_pkg
+  if [[ "${_flag}" == "true" ]]; then
+    _msg_info \
+      "detected as glib pkg"
+    _set \
+      "termux" \
+      "glib" \
+      "true"
+  fi
+}
+
+
 # Termux makepkg
 # $@:makepkg args
 _termux_makepkg() {
@@ -460,8 +568,7 @@ _termux_makepkg() {
     "${_tmpdir}"
   _termux_flags
   _flags
-  cat \
-    'PKGBUILD'
+  _show_config
   makepkg \
     "${_args[@]}"
   [[ $? -eq 0 ]] && \
@@ -493,7 +600,7 @@ _set_override() {
       "${_var}" \
       "$( \
         _get \
-	  "override_${obj}" \
+	  "override_${_obj}" \
           "${_var}")"
   elif [[ -z \
 	    "$( \
@@ -547,8 +654,8 @@ _override_path() {
 _set_overrides() {
   _set_override \
     "termux" \
-    "glibc" \
-    "false"
+    "libc" \
+    "bionic"
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
@@ -567,9 +674,10 @@ _usage() {
         ENDUSAGETEXT || true
 usage: $(_get "app" "name") [options] [makepkg options]
   options:
-     -g (--glibc)         Whether to build using glibc in
-                          Termux environments.
-		          Default: '$(_get "termux" "glibc")'
+     -g                   C library to use in
+                          Termux environments
+			  ('glibc', 'bionic').
+		          Default: '$(_get "termux" "libc")'
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -583,19 +691,58 @@ ENDUSAGETEXT
     "${1}"
 }
 
+_display_flags() {
+  local \
+    _flags=(
+      ${1}
+    )
+  for _flag \
+    in "${_flags[@]}"; do
+  _msg_info "                              ${_flag}"
+  done
+}
+
+# Shows configuration options.
+_show_config() {
+  local \
+    build_date
+  TZ=UTC \
+    printf \
+      -v build_date \
+      '%(%FT%R%z)T' \
+      "${SOURCE_DATE_EPOCH}"
+  _msg_info "${app_name} configuration settings"
+  _msg_info "                    glibc:   $(_get "termux" "glibc")"
+  _msg_info "                     arch:   $(uname -m)"
+  _msg_info "                       cc:   $(_get_cc)"
+  _msg_info "                 CPPFLAGS:   "
+  _display_flags                          "${CPPFLAGS}"
+  _msg_info "                   CFLAGS:   "
+  _display_flags                          "${CFLAGS}"
+  _msg_info "                 CXXFLAGS:   "
+  _display_flags                          "${CXXFLAGS}"
+  _msg_info "                  LDFLAGS:   "
+  _display_flags                          "${LDFLAGS}"
+  _msg_info ""
+  _msg_info "      PKGBUILD:"
+  _msg_info ""
+  _msg_info "$(cat 'PKGBUILD')"
+
+}
+
 _globals
 _global_variables
 
 while \
   getopts \
-    'g:glibc:vh?' \
+    'g:vh?' \
     arg; do
   case \
     "${arg}" in
-    g|glibc) override_termux_glibc="true" ;;
+    g) override_termux_libc="${OPTARG}" ;;
     v) override_quiet="n" ;;
     h|?) _usage \
-	    0 ;;
+	   1 ;;
     *)
     _msg_error \
       "Invalid argument '${arg}'" \
@@ -607,11 +754,12 @@ while \
 done
 
 shift \
-  $((OPTIND - 1))
-
+  $(( \
+    OPTIND - 1 \
+  ))
 _args=(
   "$@"
 )
-
+_set_overrides
 _reallymakepkg \
   "${_args[@]}"
