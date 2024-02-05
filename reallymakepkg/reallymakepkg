@@ -311,12 +311,12 @@ _termux_bionic_flags() {
 # Tries to guess correct libc
 _termux_auto_flags() {
   local \
-    _arch \
+    _os \
     _libc="bionic"
-  _arch="$( \
+  _os="$( \
     uname \
-      -m)"
-  [[ "${_arch}" == 'armv7l' ]] && \
+      -o)"
+  [[ "${_os}" == 'GNU/Linux' ]] && \
     _libc="glibc" 
   _set \
     "termux" \
@@ -774,7 +774,12 @@ _display_flags() {
 # Shows configuration options.
 _show_config() {
   local \
-    build_date
+    build_date \
+    _pygmentize_opts=()
+  _pygmentize_opts=(
+    -l bash
+    -O style=emacs,linenos=1
+  )
   TZ=UTC \
     printf \
       -v build_date \
@@ -799,7 +804,7 @@ _show_config() {
     "$( \
       cat \
         'PKGBUILD')" \
-    "style=emacs"
+    "${_pygmentize_opts[@]}"
 
 }
 
@@ -807,13 +812,19 @@ _show_config() {
 _printf() {
   local \
     _args=()
+    _pygmentize_opts=()
+  _pygmentize_opts=(
+    -g
+    -O style=emacs
+  )
   _args=(
       "$@"
   )
   _sho \
     "$( \
       printf \
-        "${_args[@]}")"
+        "${_args[@]}")" \
+    "${_pygmentize_opts[@]}"
 }
 
 # Colorized Display function
@@ -821,7 +832,9 @@ _sho() {
   local \
     _text="${1}"
   shift
-  opts=("$@")
+  _pygmentize_opts=(
+    "$@"
+  )
   [[ \
     $( \
       command \
@@ -830,9 +843,7 @@ _sho() {
     echo \
       "${_text}" | 
       pygmentize \
-        -g \
-        -O \
-          style=emacs,${_opts[*]} && \
+        "${_pygmentize_opts[@]}" && \
     return
   printf \
     "%s\n" \
