@@ -70,12 +70,18 @@ _global_variables() {
 # $1: message string
 _msg_info() {
   local \
-    _msg="${1}"
+    _msg=(
+      "$@"
+    ) \
+    _line
   [[ "${quiet}" == "y" ]] || \
-    _printf \
-      '[%s] INFO: %s\n' \
-      "${app_name}" \
-      "${_msg}"
+    for _line \
+      in "${_msg[@]}"; do
+      _printf \
+        '[%s] INFO: %s\n' \
+        "${app_name}" \
+        "${_line}"
+    done
 }
 
 # Show a WARNING message
@@ -481,8 +487,17 @@ _is_setuptools_pkg() {
       " ${_pkgname[*]} " | \
       grep \
         " python2-" )"
+  _msg=(
+    "pkgname"
+    "  ${_py2_flag}"
+    "triggers"
+    "  Python 2 quirk:"
+    "    reverting back"
+    "      '"'${terdir}'"' to"
+    "      '"'${pkgdir}'"'"
+  )
   _msg_info \
-    "Python 2 flag: ${_py2_flag}"
+    "${_msg[@]}"
   _it_flag="$( \
     echo \
       " ${_pkgname[*]} " | \
@@ -490,7 +505,7 @@ _is_setuptools_pkg() {
         " python-setuptools" )"
   if \
     [[ "${_py2_flag}" != "" ]]; then
-    _flag=""
+    _flag="${_py2_flag}"
   fi
   if \
     [[ "${_it_flag}" != "" ]]; then
@@ -502,8 +517,8 @@ _is_build_pkg() {
   local \
     _makedepends=() \
     _pkg \
-    _pkgname=() \
-    _flag=""
+    _pkgname=()
+  _flag=""
   _makedepends=( $( \
     _recipe_get \
       "makedepends")
@@ -512,7 +527,7 @@ _is_build_pkg() {
     _recipe_get \
       "pkgname")
   )
- for _pkg \
+  for _pkg \
     in "${_makedepends[@]}"; do
     if [[ "${_pkg}" == "python-build" ]]; then
       _flag="true"
