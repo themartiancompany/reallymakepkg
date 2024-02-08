@@ -307,6 +307,12 @@ _termux_bionic_flags() {
     -landroid-support
     -landroid-posix-semaphore
     -landroid-sysv-semaphore
+    # These are actually for
+    # clang/llvm and tied to how
+    # termux has built them
+    -fuse-ld=lld
+    -rtlib=compiler-rt
+    -unwindlib=libunwind
   )
   _cflags+=(
     # Required by GLib
