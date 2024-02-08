@@ -229,7 +229,7 @@ _get_cc() {
        awk \
          '{print $3}' | \
          sed \
-           "s/'//g")
+           "s%'%%g")
 }
 
 _get_usr() {
@@ -394,8 +394,8 @@ _termux_flags() {
       "${LDFLAGS}" \
       "${_ldflags[*]}")"
   export \
-    CFLAGS+=" ${_cflags[*]}" \
-    CXXFLAGS+=" ${_cflags[*]}"
+    CFLAGS+=" ${_cflags[*]}"
+    # CXXFLAGS+=" ${_cflags[*]}"
 }
 
 # Reads a variable from the PKGBUILD
@@ -487,17 +487,6 @@ _is_setuptools_pkg() {
       " ${_pkgname[*]} " | \
       grep \
         " python2-" )"
-  _msg=(
-    "pkgname"
-    "  ${_py2_flag}"
-    "triggers"
-    "  Python 2 quirk:"
-    "    reverting back"
-    "      '"'${terdir}'"' to"
-    "      '"'${pkgdir}'"'"
-  )
-  _msg_info \
-    "${_msg[@]}"
   _it_flag="$( \
     echo \
       " ${_pkgname[*]} " | \
@@ -511,6 +500,16 @@ _is_setuptools_pkg() {
     [[ "${_it_flag}" != "" ]]; then
     _flag=""
   fi
+  _msg=(
+    "pkgname"
+    "  ${_flag}"
+    "triggers"
+    "  Python quirk:"
+    "    reverting back"
+    "      '"'${terdir}'"' to"
+    "      '"'${pkgdir}'"'"
+  )
+
 }
 
 _is_build_pkg() {
@@ -561,7 +560,7 @@ _setuptools_quirk() {
         "reverting 'terdir' to 'pkgdir' in --root option"
       sed \
         -i \
-        "s/${_pattern}/root=\"\${pkgdir}\"/g" \
+        "s%${_pattern}%root=\"\${pkgdir}\"%g" \
         "${_tmpdir}/PKGBUILD"
   fi
 }
@@ -593,8 +592,11 @@ _python_quirks() {
     _flag
   _is_python_pkg
   if [[ "${_flag}" == "true" ]]; then
+    _msg=(
+      "detected Python package"
+    )
     _msg_info \
-      "detected as python pkg"
+      "${_msg[*]}"
     _build_quirk
     _setuptools_quirk
   fi
@@ -625,11 +627,27 @@ _is_glib_pkg() {
 }
 
 _libc_quirks() {
+  if \
+    [[ \
+     "$( \
+       _get \
+         "termux" \
+         "libc")" == "glibc" ]]; then
+    _pkgdir='${terdir}/glibc'
+  fi
+}
+
+_termux_quirks() {
   local \
-    _pattern
-  _pattern="pkgname=[,+]="
-  _msg_info \
-    "temporary sigh"
+    _pkgdir='${terdir}'
+  sed \
+    "s%pkgdir%terdir%g" \
+    "$(pwd)/PKGBUILD" > \
+    "${_tmpdir}/PKGBUILD"
+  _libc_quirks
+  # echo\
+  #   "_terdir=\"${_pkgdir}\"" >> \
+  #   "${_tmpdir}/PKGBUILD"
 }
 
 # Termux makepkg
@@ -646,16 +664,13 @@ _termux_makepkg() {
     -a \
     "$(pwd)"/* \
     "${_tmpdir}"
-  sed \
-    "s/pkgdir/terdir/g" \
-    "$(pwd)/PKGBUILD" > \
-    "${_tmpdir}/PKGBUILD"
+  _libc_quirks
+  _termux_quirks
   _python_quirks
   cd \
     "${_tmpdir}"
   _termux_flags
   _flags
-  _libc_quirks
   _show_config
   makepkg \
     "${_args[@]}"
