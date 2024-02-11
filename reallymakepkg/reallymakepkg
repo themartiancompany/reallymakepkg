@@ -227,7 +227,11 @@ _get_cc() {
          "$( \
            command \
              -v \
-               "cc")" | \
+               "cc" \
+	       "gcc" | \
+	     head \
+	       -n \
+	         1)" | \
        awk \
          '{print $3}' | \
          sed \
