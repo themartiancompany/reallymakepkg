@@ -54,13 +54,15 @@ _globals() {
 
 _global_variables() {
   [[ -v LDFLAGS ]] || \
-    LDFLAGS=""
+     LDFLAGS=""
   [[ -v CPPFLAGS ]] || \
-   CPPFLAGS=""
+    CPPFLAGS=""
   [[ -v CFLAGS ]] || \
-   CFLAGS=""
+    CFLAGS=""
   [[ -v CXXFLAGS ]] || \
-   CXXFLAGS=""
+    CXXFLAGS=""
+  [[ -v TERMUX_VERSION ]] || \
+    TERMUX_VERSION=""
   termux_glib=""
   termux_libc=""
   quiet=""
