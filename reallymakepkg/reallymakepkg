@@ -3,13 +3,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 
 _globals() {
+  local \
+    _OLDPWD
   set \
     -e \
     -u
   shopt \
     -s \
       extglob
-  
   # Control the environment
   umask \
     0022
@@ -26,15 +27,20 @@ _globals() {
       LANGUAGE
   [[ -v SOURCE_DATE_EPOCH ]] || \
     printf \
-      -v SOURCE_DATE_EPOCH \
-      '%(%s)T' -1
+      -v \
+        SOURCE_DATE_EPOCH \
+      '%(%s)T' \
+      -1
   export \
     SOURCE_DATE_EPOCH
   
   # Get script path
+  # shellcheck disable=SC2005
   _path="$( \
+    _OLDPWD="$( \
+      pwd)" && \
     export \
-      _OLDPWD="$(pwd)" && \
+      _OLDPWD && \
     cd \
       "$( \
 	dirname \
@@ -47,8 +53,8 @@ _globals() {
       _OLDPWD)"
   unset \
     _OLDPWD
-
-  # Set application name from the script's file name
+  # Set application name
+  # from the script's file name
   app_name="${0##*/}"
 }
 
@@ -121,11 +127,10 @@ _set() {
   local \
     _obj="${1}" \
     _var="${2}" \
-    _value="${3}" \
-    _type
-
+    _value="${3}"
   printf \
     -v "${_obj}_${_var}" \
+    "%s" \
     "${_value}"
 }
 
