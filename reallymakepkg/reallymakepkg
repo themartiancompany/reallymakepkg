@@ -302,10 +302,12 @@ _termux_glib_flags() {
 # Set bionic flags
 _termux_bionic_flags() {
   _ldflags+=(
+    -landroid-glob
     -landroid-shmem
     -landroid-execinfo
     -landroid-support
     -landroid-posix-semaphore
+    -landroid-spawn
     -landroid-sysv-semaphore
     # These are actually for
     # clang/llvm and tied to how
