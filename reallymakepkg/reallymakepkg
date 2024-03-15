@@ -271,7 +271,7 @@ _termux_makepkg() {
       -d)"
   cp \
     -a \
-    "$(pwd)"/* \
+    "$(pwd)"/{"","."}* \
     "${_tmpdir}"
   sed \
     "s/pkgdir/terdir/g" \
