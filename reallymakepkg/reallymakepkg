@@ -71,6 +71,7 @@ _global_variables() {
     TERMUX_VERSION=""
   termux_glib=""
   termux_libc=""
+  work_dir=""
   quiet=""
 }
 
@@ -427,7 +428,10 @@ _recipe_get() {
   _ref="${_obj}[@]"
   _value="$( \
     source \
-      "${_tmpdir}/PKGBUILD" && \
+      "$( \
+        _get \
+          "work" \
+	  "dir")/PKGBUILD" && \
     _type="$( \
       _get_type \
         "${_obj}")" && \
@@ -497,7 +501,10 @@ _is_setuptools_pkg() {
   )
   _flag="$( \
     cat \
-      "${_tmpdir}/PKGBUILD" | \
+      "$( \
+        _get \
+	  "work" \
+	  "dir")/PKGBUILD" | \
       grep \
         -o \
 	'setup.py')"
@@ -570,7 +577,10 @@ _setuptools_quirk() {
       "Detected as setuptools pkg"
     _pattern="$( \
       cat \
-        "${_tmpdir}/PKGBUILD" | \
+        "$( \
+	  _get \
+	    "work" \
+	    "dir")/PKGBUILD" | \
         grep \
           -o \
           'root=[^ ]*terdir[^ ]*')"
@@ -580,7 +590,10 @@ _setuptools_quirk() {
       sed \
         -i \
         "s%${_pattern}%root=\"\${pkgdir}\"%g" \
-        "${_tmpdir}/PKGBUILD"
+        "$( \
+	  _get \
+	    "work" \
+	    "dir")/PKGBUILD"
   fi
 }
 
@@ -593,7 +606,10 @@ _build_quirk() {
       "Using 'pkgdir' instead of 'terdir' in build module's --destdir"
     _pattern="$( \
       cat \
-        "${_tmpdir}/PKGBUILD" | \
+        "$( \
+	  _get \
+	    "work" \
+	    "dir")/PKGBUILD" | \
         grep \
           -o \
           'destdir=[^ ]*terdir[^ ]*')"
@@ -601,7 +617,10 @@ _build_quirk() {
       sed \
         -i \
         "s%${_pattern}%destdir=\$pkgdir%g" \
-        "${_tmpdir}/PKGBUILD"
+        "$( \
+	  _get \
+	    "work" \
+	    "dir")/PKGBUILD"
   fi
 }
 
@@ -662,11 +681,17 @@ _termux_quirks() {
   sed \
     "s%pkgdir%terdir%g" \
     "$(pwd)/PKGBUILD" > \
-    "${_tmpdir}/PKGBUILD"
+    "$( \
+      _get \
+        "work" \
+        "dir")/PKGBUILD"
   _libc_quirks
   # echo\
   #   "_terdir=\"${_pkgdir}\"" >> \
-  #   "${_tmpdir}/PKGBUILD"
+  #   "$( \
+  #     _get \
+  #       "work" \
+  #       "dir")/PKGBUILD"
 }
 
 # Termux makepkg
@@ -676,30 +701,38 @@ _termux_makepkg() {
     _args=()
   _args=(
     "$@")
-  _tmpdir="$( \
-    mktemp \
-      -d)"
   cp \
     -a \
     "$(pwd)"/{"","."}* \
-    "${_tmpdir}"
+    "$( \
+      _get \
+        "work" \
+	"dir")"
   _libc_quirks
   _termux_quirks
   _python_quirks
   cd \
-    "${_tmpdir}"
+    "$( \
+      _get \
+        "work" \
+	"dir")"
   _termux_flags
   _flags
   _show_config
   makepkg \
     "${_args[@]}"
   [[ $? -eq 0 ]] && \
-  [[ *".pkg."* != "" ]] && \
+  [[ "$(ls \
+          "./"*".pkg."* != "" ]] && \
     mv \
       *".pkg."* \
       "${OLDPWD}" && \
     rm \
-      -rf "${_tmpdir}"
+      -rf \
+        "$( \
+	  _get \
+	    "work" \
+	    "dir")"
   cd \
     "${OLDPWD}"
 }
@@ -776,6 +809,12 @@ _override_path() {
 # from arch-grub command line option parameters
 _set_overrides() {
   _set_override \
+    "work" \
+    "dir" \
+    "$( \
+      mktemp \
+        -d)"
+  _set_override \
     "termux" \
     "libc" \
     "auto"
@@ -801,6 +840,9 @@ _usage() {
         ENDUSAGETEXT || true
 usage: $(_get "app" "name") [options] [makepkg options]
   options:
+     -w                   Builds the package in a
+                          specific directory instead
+			  than in a temporary one.
      -g                   C library to use in
                           Termux environments
 			  ('glibc', 'bionic').
@@ -844,8 +886,10 @@ _show_config() {
       '%(%FT%R%z)T' \
       "${SOURCE_DATE_EPOCH}"
   _msg_info "${app_name} configuration settings"
+  _msg_info "           Work directory:   $(_get "work" "dir")"
   _msg_info "                     libc:   $(_get "termux" "libc")"
   _msg_info "                     arch:   $(uname -m)"
+  _msg_info "                       os:   $(uname -o)"
   _msg_info "                       cc:   $(_get_cc)"
   _msg_info "                 CPPFLAGS:   "
   _display_flags                          "${CPPFLAGS}"
@@ -917,10 +961,11 @@ _global_variables
 
 while \
   getopts \
-    'g:vh?' \
+    'w:g:vh?' \
     arg; do
   case \
     "${arg}" in
+    w) override_work_dir="${OPTARG}" ;;
     g) override_termux_libc="${OPTARG}" ;;
     v) override_quiet="n" ;;
     h|?) _usage \
