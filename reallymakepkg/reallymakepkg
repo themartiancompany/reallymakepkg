@@ -544,13 +544,19 @@ _termux_makepkg() {
         _get \
           "work" \
 	  "dir")/")" != "" ]]; then
-    _msg_error \
+    _msg_warning \
       "work directory $( \
         _get \
 	  "work" \
-	  "dir") already existing" \
-      1
-  else
+	  "dir") non-empty"
+  elif \
+    [ \
+      ! \
+        -d \
+          "$( \
+            _get \
+              "work" \
+	      "dir")" ]; then
     mkdir \
       -p \
         "$( \
@@ -559,7 +565,7 @@ _termux_makepkg() {
 	    "dir")"
   fi
   cp \
-    -a \
+    -af \
     "$( \
       pwd)"/{"","."}* \
     "$( \
