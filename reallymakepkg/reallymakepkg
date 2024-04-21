@@ -2,61 +2,16 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
-_globals() {
-  local \
-    _OLDPWD
-  set \
-    -e \
-    -u
-  shopt \
-    -s \
-      extglob
-  # Control the environment
-  umask \
-    0022
-  export \
-    LC_ALL="C.UTF-8"
-  # LC_ALL=C.UTF-8, unlike LC_ALL=C,
-  # does not override LANGUAGE.
-  # See 
-  # https://sourceware.org/bugzilla/show_bug.cgi?id=16621
-  # and 
-  # https://savannah.gnu.org/bugs/?62815
-  [[ -v LANGUAGE ]] && \
-    unset \
-      LANGUAGE
-  [[ -v SOURCE_DATE_EPOCH ]] || \
-    printf \
-      -v \
-        SOURCE_DATE_EPOCH \
-      '%(%s)T' \
-      -1
-  export \
-    SOURCE_DATE_EPOCH
-  
-  # Get script path
-  # shellcheck disable=SC2005
-  _path="$( \
-    _OLDPWD="$( \
-      pwd)" && \
-    export \
-      _OLDPWD && \
-    cd \
-      "$( \
-	dirname \
-          "${BASH_SOURCE[0]}")" && \
-    echo \
-      "$(pwd)" && \
-    cd \
-      "${_OLDPWD}" && \
-    unset \
-      _OLDPWD)"
-  unset \
-    _OLDPWD
-  # Set application name
-  # from the script's file name
-  app_name="${0##*/}"
-}
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
 
 _global_variables() {
   [[ -v LDFLAGS ]] || \
@@ -72,128 +27,8 @@ _global_variables() {
   termux_glib=""
   termux_libc=""
   work_dir=""
+  color=""
   quiet=""
-}
-
-# Show an INFO message
-# $1: message string
-_msg_info() {
-  local \
-    _msg=(
-      "$@"
-    ) \
-    _line
-  [[ "${quiet}" == "y" ]] || \
-    for _line \
-      in "${_msg[@]}"; do
-      _printf \
-        '[%s] INFO: %s\n' \
-        "${app_name}" \
-        "${_line}"
-    done
-}
-
-# Show a WARNING message
-# $1: message string
-_msg_warning() {
-  local \
-    _msg="${1}"
-  _printf \
-    '[%s] WARNING: %s\n' \
-    "${app_name}" \
-    "${_msg}" >&2
-}
-
-# Show an ERROR message then exit with status
-# $1: message string
-# $2: exit code number (with 0 does not exit)
-_msg_error() {
-  local \
-    _msg="${1}" \
-    _error=${2}
-  _printf \
-    '[%s] ERROR: %s\n' \
-    "${app_name}" \
-    "${_msg}" >&2
-  if (( _error > 0 )); then
-    exit "${_error}"
-  fi
-}
-
-# Sets object string attributes
-# $1: object
-# $2: an object string attribute
-# $3: a value
-_set() {
-  local \
-    _obj="${1}" \
-    _var="${2}" \
-    _value="${3}"
-  printf \
-    -v "${_obj}_${_var}" \
-    "%s" \
-    "${_value}"
-}
-
-# Returns type ('string', 'list', 'dict') given
-# its name
-# $1: an object
-_get_type() {
-  local \
-    _obj="${1}" \
-    _type="string" \
-    _declare
-  _declare="$( \
-    declare \
-      -p \
-        "${_obj}" 2>&1)"
-  [[ \
-    "${_declare}" == \
-    *"declare:"*"${_obj}"*": not found" ]] && \
-    _type="undefined"
-  [[ \
-    "${_declare}" == \
-    "declare -A "* ]] && \
-    _type="dict"
-  [[ \
-    "${_declare}" == \
-    "typeset -a"* ]] && \
-    _type="array"
-  echo \
-    "${_type}"
-}
-
-# Returns an attribute value for a 
-# given object
-# $1: an object
-# $2: an object attribute
-_get() {
-  local \
-    _obj="${1}" \
-    _var="${2}" \
-    _msg \
-    _ref \
-    _type \
-    _target
-  _target="${_obj}_${_var}"
-  _ref="${_target}[@]"
-  _type="$( \
-    _get_type \
-      "${_target}")"
-  [[ "${_type}" == "undefined" ]] && \
-    _msg=(
-      "Attribute '${_var}' is not defined"
-      "for object '${_obj}'") && \
-    _msg_error \
-      "${_msg[*]}" \
-      1
-  [[ "${_type}" == "dict" ]] && \
-    echo \
-      "${_obj[${_var}]}" && \
-    return
-  printf \
-    "%s\n" \
-    "${!_ref}"
 }
 
 # System-independent makepkg
@@ -700,10 +535,33 @@ _termux_makepkg() {
   local \
     _args=()
   _args=(
-    "$@")
+    "$@"
+  )
+  if \
+    [[ \
+      "$( \
+        ls "$( \
+        _get \
+          "work" \
+	  "dir")/")" != "" ]]; then
+    _msg_error \
+      "work directory $( \
+        _get \
+	  "work" \
+	  "dir") already existing" \
+      1
+  else
+    mkdir \
+      -p \
+        "$( \
+	  _get \
+	    "work" \
+	    "dir")"
+  fi
   cp \
     -a \
-    "$(pwd)"/{"","."}* \
+    "$( \
+      pwd)"/{"","."}* \
     "$( \
       _get \
         "work" \
@@ -737,74 +595,6 @@ _termux_makepkg() {
     "${OLDPWD}"
 }
 
-# Reassign an object variable
-# if an override variable is defined;
-# otherwise it defaults
-# to an input default.
-# $1: object
-# $2: variable
-# $3: default value
-_set_override() {
-  local \
-    _obj="${1}" \
-    _var="${2}" \
-    _default="${3}"
-  if [[ -v "override_${_obj}_${_var}" ]]; then
-    _set \
-      "${_obj}" \
-      "${_var}" \
-      "$( \
-        _get \
-	  "override_${_obj}" \
-          "${_var}")"
-  elif [[ -z \
-	    "$( \
-	      _get \
-	        "${_obj}" \
-                "${_var}")" ]]; then
-    _set \
-      "${_obj}" \
-      "${_var}" \
-      "${_default}"
-  fi
-}
-
-# Re-assign an object variable
-# pointing to a path if an override variable
-# is defined, otherwise it defaults to an input path
-# $1: object
-# $2: variable
-# $3: value (a path)
-_override_path() {
-  local \
-    _obj="${1}" \
-    _var="${2}" \
-    _value="${3}" \
-    _path
-  _path="$( \
-    realpath \
-      -q -- \
-      "${_value}" || \
-      true)"
-  [[ "${_path}" == "" ]] && \
-    _msg_error \
-      "${_value} is not a valid path." \
-      1
-  _set_override \
-    "${_obj}" \
-    "${_var}" \
-    "${_value}"
-  _set \
-    "${_obj}" \
-    "${_var}" \
-    "$( \
-      realpath -- \
-        "$( \
-	  _get \
-	    "${_obj}" \
-            "${_var}")")"
-}
-
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
@@ -822,6 +612,11 @@ _set_overrides() {
     "termux" \
     "glib" \
     "false"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
@@ -848,6 +643,7 @@ usage: $(_get "app" "name") [options] [makepkg options]
 			  ('glibc', 'bionic').
 		          Default: '$(_get "termux" "libc")'
      -h                   This message.
+     -c                   Enable colors
      -v                   Enable verbose output
 ENDUSAGETEXT
   printf \
@@ -910,63 +706,18 @@ _show_config() {
 
 }
 
-# Colorized print
-_printf() {
-  local \
-    _args=()
-    _pygmentize_opts=()
-  _pygmentize_opts=(
-    -g
-    -O style=emacs
-  )
-  _args=(
-      "$@"
-  )
-  _sho \
-    "$( \
-      printf \
-        "${_args[@]}")" \
-    "${_pygmentize_opts[@]}"
-}
-
-# Colorized Display function
-_sho() {
-  local \
-    _text="${1}" \
-    _pygmentize
-  _pygmentize="$( \
-    command \
-      -v \
-      "pygmentize" || \
-    command \
-      -v \
-      "pygmentize2")"
-  shift
-  _pygmentize_opts=(
-    "$@"
-  )
-  [[ "${_pygmentize}" != "" ]] && \
-    echo \
-      "${_text}" | 
-      "${_pygmentize}" \
-        "${_pygmentize_opts[@]}" && \
-    return
-  printf \
-    "%s\n" \
-    "${_text}"
-}
-
 _globals
 _global_variables
 
 while \
   getopts \
-    'w:g:vh?' \
+    'w:g:cvh?' \
     arg; do
   case \
     "${arg}" in
     w) override_work_dir="${OPTARG}" ;;
     g) override_termux_libc="${OPTARG}" ;;
+    c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _usage \
 	   1 ;;
