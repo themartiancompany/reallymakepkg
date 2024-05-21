@@ -27,23 +27,44 @@ _global_variables() {
   termux_glib=""
   termux_libc=""
   work_dir=""
+  pkgver_update=""
   color=""
   quiet=""
+}
+
+_pkgver_update() {
+  local \
+    _makepkg_opts=()
+  _makepkg_opts=(
+    -Adf
+    --nobuild
+    --nodownload
+  )
+  makepkg \
+    "${_makepkg_opts[@]}"
 }
 
 # System-independent makepkg
 _reallymakepkg() {
   local \
+    _update="${1}" \
     _args=()
+  shift \
+    1
   _args=(
-    "$@")
-  [[ -n "${TERMUX_VERSION}" ]] && \
+    "$@"
+  )
+  if [[ -n "${TERMUX_VERSION}" ]]; then
     _termux_makepkg \
-      "${_args[@]}" && \
-    return
-  _show_config
-  makepkg \
-    "${_args[@]}"
+      "${_args[@]}"
+  elif [[ ! -n "${TERMUX_VERSION}" ]]; then
+    _show_config
+    makepkg \
+      "${_args[@]}"
+  fi
+  if [[ "${_update}" == true ]]; then
+    _pkgver_update
+  fi
 }
 
 # Apply useful hopefully globally innocuous flags
@@ -91,7 +112,8 @@ _termux_err_flags() {
   local \
     _err_prefix="-Wno-" \
     _err_flags=() \
-    _err
+    _err \
+    _cc
   _err_flags=(
     "implicit-function-declaration"
     "language-extension-token"
@@ -99,11 +121,12 @@ _termux_err_flags() {
     # "incompatible-pointer-types"
     # "overflow"
   )
-  [[ \
-    "$( \
-      basename \
-        "$(_get_cc)")" == *"gcc"* ]] && \
+  _cc="$( \
+    basename \
+      "$(_get_cc)")"
+  if [[ "${_cc}" == *"gcc"* ]]; then
     _err_prefix="${_err_prefix}" # error-"
+  fi
   for _err \
     in "${_err_flags[@]}"; do
     _cflags+=(
@@ -118,17 +141,19 @@ _termux_arch_flags() {
   _arch="$( \
     uname \
       -m)"
-  [[ "${_arch}" == \
-	  "armv7l" ]] && \
+  if [[ "${_arch}" == \
+	"armv7l" ]]; then
     _glibc_flags+=(
       -D__arc__=1
       -D_GNU_SOURCE
     )
-  [[ "${_arch}" == \
-	  "arm" ]] && \
+  fi
+  if [[ "${_arch}" == \
+	"arm" ]]; then
     _cflags+=(
       -D__arc__=1
     )
+  fi
 }
 
 # Sets flags to unsure GLib builds
@@ -140,10 +165,12 @@ _termux_glib_flags() {
     "-I$(_get_usr)/lib/glib-2.0/include"
     "-I$(_get_usr)/include"
   )
-  [[ "$(_is_glib_pkg)" == "true" ]] && \
+  if [[ "$(_is_glib_pkg)" == \
+	"true" ]]; then
     _cflags+=(
       "${_glib_flags[*]}"
     )
+  fi
 }
 
 # Set bionic flags
@@ -230,7 +257,7 @@ _termux_flags() {
   local \
     _cflags=() \
     _glibc_flags=() \
-    _ldflags=() \
+    _ldflags=()
   _termux_err_flags
   _termux_arch_flags
   # _cppflags+=(
@@ -618,6 +645,10 @@ _set_overrides() {
     "termux" \
     "glib" \
     "false"
+  _set_override \
+    "pkgver" \
+    "update" \
+    "n"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -717,12 +748,13 @@ _global_variables
 
 while \
   getopts \
-    'w:g:cvh?' \
+    'w:g:ucvh?' \
     arg; do
   case \
     "${arg}" in
     w) override_work_dir="${OPTARG}" ;;
     g) override_termux_libc="${OPTARG}" ;;
+    u) override_pkgver_update="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _usage \
