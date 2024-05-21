@@ -38,7 +38,7 @@ _pkgver_update() {
   _makepkg_opts=(
     -Adf
     --nobuild
-    --nodownload
+    --nocheck
   )
   makepkg \
     "${_makepkg_opts[@]}"
@@ -356,36 +356,39 @@ _is_setuptools_pkg() {
   local \
     _pkgname=() \
     _it_flag \
-    _py2_flag
+    _py2_flag \
+    _recipe
+  _recipe="$( \
+    _get \
+      "work" \
+      "dir")/PKGBUILD" 
   _pkgname=( $( \
     _recipe_get \
       "pkgname")
   )
   _flag="$( \
     cat \
-      "$( \
-        _get \
-	  "work" \
-	  "dir")/PKGBUILD" | \
+      "${_recipe}" | \
       grep \
         -o \
-	'setup.py')"
+	'setup.py' || \
+    true)"
   _py2_flag="$( \
     echo \
       " ${_pkgname[*]} " | \
       grep \
-        " python2-" )"
+        " python2-" || \
+    true)"
   _it_flag="$( \
     echo \
       " ${_pkgname[*]} " | \
       grep \
-        " python-setuptools" )"
-  if \
-    [[ "${_py2_flag}" != "" ]]; then
+        " python-setuptools" || \
+    true)"
+  if [[ "${_py2_flag}" != "" ]]; then
     _flag="${_py2_flag}"
   fi
-  if \
-    [[ "${_it_flag}" != "" ]]; then
+  if [[ "${_it_flag}" != "" ]]; then
     _flag=""
   fi
   _msg=(
@@ -397,7 +400,6 @@ _is_setuptools_pkg() {
     "      '"'${terdir}'"' to"
     "      '"'${pkgdir}'"'"
   )
-
 }
 
 _is_build_pkg() {
@@ -432,21 +434,23 @@ _is_build_pkg() {
 
 _setuptools_quirk() {
   local \
-    _pattern
+    _pattern \
+    _recipe
+  _recipe="$( \
+    _get \
+      "work" \
+      "dir")/PKGBUILD"
   _is_setuptools_pkg 
   if [[ "${_flag}" != "" ]]; then
     _msg_info \
       "Detected as setuptools pkg"
     _pattern="$( \
       cat \
-        "$( \
-	  _get \
-	    "work" \
-	    "dir")/PKGBUILD" | \
+        "${_recipe}" | \
         grep \
           -o \
           'root=[^ ]*terdir[^ ]*')"
-    [[ "${_pattern}" != "" ]] && \
+    if [[ "${_pattern}" != "" ]]; then
       _msg_info \
         "reverting 'terdir' to 'pkgdir' in --root option"
       sed \
@@ -456,33 +460,34 @@ _setuptools_quirk() {
 	  _get \
 	    "work" \
 	    "dir")/PKGBUILD"
+    fi
   fi
 }
 
 _build_quirk() {
   local \
-    _pattern
+    _pattern \
+    _recipe
+  _recipe="$( \
+    _get \
+      "work" \
+      "dir")/PKGBUILD"
   _is_build_pkg
   if [[ "${_flag}" == "true" ]]; then
     _msg_info \
       "Using 'pkgdir' instead of 'terdir' in build module's --destdir"
     _pattern="$( \
       cat \
-        "$( \
-	  _get \
-	    "work" \
-	    "dir")/PKGBUILD" | \
+        "${_recipe}" | \
         grep \
           -o \
           'destdir=[^ ]*terdir[^ ]*')"
-    [[ "${_pattern}" != "" ]] && \
+    if [[ "${_pattern}" != "" ]]; then
       sed \
         -i \
         "s%${_pattern}%destdir=\$pkgdir%g" \
-        "$( \
-	  _get \
-	    "work" \
-	    "dir")/PKGBUILD"
+        "${_recipe}"
+    fi
   fi
 }
 
