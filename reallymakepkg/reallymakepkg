@@ -783,4 +783,8 @@ _args=(
 )
 _set_overrides
 _reallymakepkg \
+  "$( \
+    _get \
+      "pkgver" \
+      "update")" \
   "${_args[@]}"
