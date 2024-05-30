@@ -270,6 +270,8 @@ _termux_flags() {
   _termux_glib_flags
   _ldflags+=(
     -lelf
+    -fopenmp
+    -static-openmp
   )
   LDFLAGS="$( \
     _add_missing_flags \
@@ -418,7 +420,9 @@ _is_build_pkg() {
   )
   for _pkg \
     in "${_makedepends[@]}"; do
-    if [[ "${_pkg}" == "python-build" ]]; then
+    if \
+      [[ "${_pkg}" == "python-build" ]] || \
+      [[ "${_pkg}" == '${_py}-build' ]]; then
       _flag="true"
       break
     fi
