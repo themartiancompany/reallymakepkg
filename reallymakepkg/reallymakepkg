@@ -466,7 +466,8 @@ _is_build_pkg() {
       _flag=""
       break
     fi
-  done
+  done || \
+  true
 }
 
 _setuptools_quirk() {
