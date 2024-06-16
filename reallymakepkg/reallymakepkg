@@ -408,7 +408,25 @@ _is_build_pkg() {
   local \
     _makedepends=() \
     _pkg \
-    _pkgname=()
+    _pkgname=() \
+    _clang16 \
+    _no_clang16_msg=() \
+    _clang16_msg=() \
+    _clang16_url
+  _clang16_url="https://github.com/termux/termux-packages/issues/20039"
+  _no_clang16_msg=(
+    "The package may not build"
+    "without installing 'clang-16'"
+    "from an user provided repo."
+    "Meanwhile that all of this gets"
+    "slowly replaced, go complain for"
+    "the extra GB to keep on your build machine"
+    "here: ${_clang16_url}"
+  )
+  _clang16_msg=(
+    "Using clang-16 to avoid a possible issue"
+    "with openmp; see ${_clang16_url}"
+  )
   _flag=""
   _makedepends=( $( \
     _recipe_get \
@@ -423,6 +441,21 @@ _is_build_pkg() {
     if \
       [[ "${_pkg}" == "python-build" ]] || \
       [[ "${_pkg}" == '${_py}-build' ]]; then
+      _clang16="$( \
+	command \
+	  -v \
+	  "clang-16")"
+      if [[ "${_clang16}" == "" ]]; then
+	_msg_warning \
+	  "${_no_clang16_msg[*]}"
+      fi
+      if [[ "${_clang16}" != "" ]]; then
+	_msg_warning \
+	  "${_clang16_msg[*]}"
+	export \
+	  CC="clang-16" \
+	  CXX="clang++-16"
+      fi
       _flag="true"
       break
     fi
