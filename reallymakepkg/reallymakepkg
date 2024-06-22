@@ -137,10 +137,14 @@ _termux_err_flags() {
 
 _termux_arch_flags() {
   local \
-    _arch
+    _arch \
+    _os
   _arch="$( \
     uname \
       -m)"
+  _os="$( \
+    uname \
+      -o)"
   if [[ "${_arch}" == \
 	"armv7l" ]]; then
     _glibc_flags+=(
@@ -149,7 +153,9 @@ _termux_arch_flags() {
     )
   fi
   if [[ "${_arch}" == \
-	"arm" ]]; then
+	"arm" ]] || \
+     [[ "${_os}" == \
+	"Android" ]]; then
     _cflags+=(
       -D__arc__=1
     )
