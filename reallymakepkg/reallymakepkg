@@ -594,7 +594,7 @@ _termux_quirks() {
     _recipe_get \
       "depends")
   )
-  if ! [[ *" inteppacman "* == " ${_depends[*]} " ]]; then
+  if [[ " ${_depends[*]} " != *' inteppacman '* ]]; then
     sed \
       "s%pkgdir%terdir%g" \
       "$(pwd)/PKGBUILD" > \
@@ -604,9 +604,9 @@ _termux_quirks() {
           "dir")/PKGBUILD"
     _libc_quirks
     return
-  fi || \
-    _msg_info \
-      "Detected Android app build; no edits to 'pkgdir'"
+  fi
+  _msg_info \
+    "Detected Android app build; no edits to 'pkgdir'"
   # echo\
   #   "_terdir=\"${_pkgdir}\"" >> \
   #   "$( \
