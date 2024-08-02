@@ -334,10 +334,10 @@ _is_python_pkg() {
   _flag=""
   _provides=( $( \
     _recipe_get \
-      "provides"))
+      "provides") )
   _pkgname=( $( \
     _recipe_get \
-      "pkgname"))
+      "pkgname") )
   _msg_info \
     "Packages: ${_pkgname[*]}"
   for _pkg \
@@ -363,6 +363,7 @@ _is_python_pkg() {
 _is_setuptools_pkg() {
   local \
     _pkgname=() \
+    _makedepends=() \
     _it_flag \
     _py2_flag \
     _recipe
@@ -374,13 +375,17 @@ _is_setuptools_pkg() {
     _recipe_get \
       "pkgname")
   )
+  _makedepends=( $( \
+    _recipe_get \
+      "makedepends")
+  )
   _flag="$( \
     cat \
       "${_recipe}" | \
       grep \
         -o \
-	'setup.py' || \
-    true)"
+	'setup.py')" || \
+    true
   _py2_flag="$( \
     echo \
       " ${_pkgname[*]} " | \
@@ -398,7 +403,8 @@ _is_setuptools_pkg() {
   fi
   if [[ "${_it_flag}" != "" ]]; then
     _flag=""
-  fi
+  fi || \
+    true
   _msg=(
     "pkgname"
     "  ${_flag}"
@@ -433,7 +439,7 @@ _is_build_pkg() {
     "Using clang-16 to avoid a possible issue"
     "with openmp; see ${_clang16_url}"
   )
-  _flag=""
+  _flag="false"
   _makedepends=( $( \
     _recipe_get \
       "makedepends")
@@ -469,9 +475,10 @@ _is_build_pkg() {
       [[ "${_pkg}" == "python-setuptools-scm" ]] && \
       [[ " ${_pkgname[*]} " != *" python-jaraco.context "* ]] && \
       [[ " ${_pkgname[*]} " != *" python-tomli "* ]]; then
-      _flag=""
+      _flag="false"
       break
-    fi
+    fi || \
+      true
   done || \
   true
 }
@@ -505,7 +512,8 @@ _setuptools_quirk() {
 	    "work" \
 	    "dir")/PKGBUILD"
     fi
-  fi
+  fi || \
+    true
 }
 
 _build_quirk() {
@@ -525,13 +533,22 @@ _build_quirk() {
         "${_recipe}" | \
         grep \
           -o \
-          'destdir=[^ ]*terdir[^ ]*')"
+          'destdir=[^ ]*terdir[^ ]*')" || \
+      true
     if [[ "${_pattern}" != "" ]]; then
+      _msg_info \
+        "Reverting..."
       sed \
         -i \
         "s%${_pattern}%destdir=\$pkgdir%g" \
         "${_recipe}"
+    elif [[ "${_pattern}" == "" ]]; then
+      _msg_warning \
+        "Option 'destdir' not found, check PKGBUILD"
     fi
+  elif [[ "${_flag}" != "true" ]]; then
+    _msg_info \
+      "package is not a python-build package"
   fi
 }
 
@@ -546,7 +563,8 @@ _python_quirks() {
     )
     _msg_info \
       "${_msg[*]}"
-    _build_quirk
+    _build_quirk || \
+      true
     _setuptools_quirk
   fi
 }
