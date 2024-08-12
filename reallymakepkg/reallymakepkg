@@ -118,6 +118,7 @@ _termux_err_flags() {
     "implicit-function-declaration"
     "language-extension-token"
     "register"
+    "unused-const-variable"
     # "incompatible-pointer-types"
     # "overflow"
   )
@@ -439,7 +440,7 @@ _is_build_pkg() {
     "Using clang-16 to avoid a possible issue"
     "with openmp; see ${_clang16_url}"
   )
-  _flag="false"
+  _flag=""
   _makedepends=( $( \
     _recipe_get \
       "makedepends")
@@ -475,7 +476,74 @@ _is_build_pkg() {
       [[ "${_pkg}" == "python-setuptools-scm" ]] && \
       [[ " ${_pkgname[*]} " != *" python-jaraco.context "* ]] && \
       [[ " ${_pkgname[*]} " != *" python-tomli "* ]]; then
-      _flag="false"
+      _flag=""
+      break
+    fi || \
+      true
+  done || \
+  true
+}
+
+_is_pip_pkg() {
+  local \
+    _makedepends=() \
+    _pkg \
+    _pkgname=() \
+    _clang16 \
+    _no_clang16_msg=() \
+    _clang16_msg=() \
+    _clang16_url
+  _clang16_url="https://github.com/termux/termux-packages/issues/20039"
+  _no_clang16_msg=(
+    "The package may not build"
+    "without installing 'clang-16'"
+    "from an user provided repo."
+    "Meanwhile that all of this gets"
+    "slowly replaced, go complain for"
+    "the extra GB to keep on your build machine"
+    "here: ${_clang16_url}"
+  )
+  _clang16_msg=(
+    "Using clang-16 to avoid a possible issue"
+    "with openmp; see ${_clang16_url}"
+  )
+  _flag=""
+  _makedepends=( $( \
+    _recipe_get \
+      "makedepends")
+  )
+  _pkgname=( $( \
+    _recipe_get \
+      "pkgname")
+  )
+  for _pkg \
+    in "${_makedepends[@]}"; do
+    if \
+      [[ "${_pkg}" == "python-pip" ]] || \
+      [[ "${_pkg}" == '${_py}-pip' ]]; then
+      _clang16="$( \
+	command \
+	  -v \
+	  "clang-16")"
+      if [[ "${_clang16}" == "" ]]; then
+	_msg_warning \
+	  "${_no_clang16_msg[*]}"
+      fi
+      if [[ "${_clang16}" != "" ]]; then
+	_msg_warning \
+	  "${_clang16_msg[*]}"
+	export \
+	  CC="clang-16" \
+	  CXX="clang++-16"
+      fi
+      _flag="true"
+      break
+    fi
+    if \
+      [[ "${_pkg}" == "python-setuptools-scm" ]] && \
+      [[ " ${_pkgname[*]} " != *" python-jaraco.context "* ]] && \
+      [[ " ${_pkgname[*]} " != *" python-tomli "* ]]; then
+      _flag=""
       break
     fi || \
       true
@@ -552,6 +620,42 @@ _build_quirk() {
   fi
 }
 
+_pip_quirk() {
+  local \
+    _pattern \
+    _recipe
+  _recipe="$( \
+    _get \
+      "work" \
+      "dir")/PKGBUILD"
+  _is_pip_pkg
+  if [[ "${_flag}" == "true" ]]; then
+    _msg_info \
+      "Using 'pkgdir' instead of 'terdir' in pip opt --root"
+    _pattern="$( \
+      cat \
+        "${_recipe}" | \
+        grep \
+          -o \
+          'root=[^ ]*terdir[^ ]*')" || \
+      true
+    if [[ "${_pattern}" != "" ]]; then
+      _msg_info \
+        "Reverting..."
+      sed \
+        -i \
+        "s%${_pattern}%root=\$pkgdir%g" \
+        "${_recipe}"
+    elif [[ "${_pattern}" == "" ]]; then
+      _msg_warning \
+        "Option 'root' not found, check PKGBUILD"
+    fi
+  elif [[ "${_flag}" != "true" ]]; then
+    _msg_info \
+      "package is not a python-pip package"
+  fi
+}
+
 _python_quirks() {
   local \
     _build_pattern \
@@ -565,7 +669,10 @@ _python_quirks() {
       "${_msg[*]}"
     _build_quirk || \
       true
-    _setuptools_quirk
+    _setuptools_quirk || \
+      true
+    # _pip_quirk || \
+    #  true
   fi
 }
 
@@ -574,7 +681,7 @@ _is_glib_pkg() {
     _makedepends=() \
     _pkg \
     _pkgname \
-    _flag="false"
+    _flag=""
   _makedepends=( $( \
     _recipe_get \
       "makedepends")
