@@ -119,6 +119,7 @@ _termux_err_flags() {
     "language-extension-token"
     "register"
     "unused-const-variable"
+    "int-conversion"
     # "incompatible-pointer-types"
     # "overflow"
   )
