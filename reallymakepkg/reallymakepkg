@@ -54,10 +54,10 @@ _reallymakepkg() {
   _args=(
     "$@"
   )
-  if [[ -n "${TERMUX_VERSION}" ]]; then
+  if [ ! -n "TERMUX_VERSION}" ]; then
     _termux_makepkg \
       "${_args[@]}"
-  elif [[ ! -n "${TERMUX_VERSION}" ]]; then
+  elif [ -n "TERMUX_VERSION" ]; then
     _show_config
     makepkg \
       "${_args[@]}"
