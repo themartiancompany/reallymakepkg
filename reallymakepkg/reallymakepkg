@@ -22,7 +22,7 @@ _global_variables() {
     CFLAGS=""
   [[ -v CXXFLAGS ]] || \
     CXXFLAGS=""
-  [[ -v TERMUX_VERSION ]] || \
+  [[ -n "TERMUX_VERSION" ]] || \
     TERMUX_VERSION=""
   termux_glib=""
   termux_libc=""
