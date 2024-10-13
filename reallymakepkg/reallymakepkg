@@ -22,8 +22,9 @@ _global_variables() {
     CFLAGS=""
   [[ -v CXXFLAGS ]] || \
     CXXFLAGS=""
-  [[ -n "TERMUX_VERSION" ]] || \
+  if [[ -z "TERMUX_VERSION" ]]; then
     TERMUX_VERSION=""
+  fi
   termux_glib=""
   termux_libc=""
   work_dir=""
@@ -54,10 +55,10 @@ _reallymakepkg() {
   _args=(
     "$@"
   )
-  if [ ! -n "TERMUX_VERSION}" ]; then
+  if [[ -v "TERMUX_VERSION" ]]; then
     _termux_makepkg \
       "${_args[@]}"
-  elif [ -n "TERMUX_VERSION" ]; then
+  else
     _show_config
     makepkg \
       "${_args[@]}"
