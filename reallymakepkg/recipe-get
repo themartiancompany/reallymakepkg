@@ -14,6 +14,7 @@ source \
   "${_lib}/libcrash-bash/crash-bash"
 
 _global_variables() {
+  get_date=""
   target_pkgbuild=""
   target_variable=""
   color=""
@@ -127,19 +128,7 @@ _display_flags() {
 
 # Shows configuration options.
 _show_config() {
-  local \
-    build_date \
-    _pygmentize_opts=()
-  _pygmentize_opts=(
-    -l bash
-    -O style=emacs,linenos=1
-  )
-  TZ=UTC \
-    printf \
-      -v build_date \
-      '%(%FT%R%z)T' \
-      "${SOURCE_DATE_EPOCH}"
-  _msg_info "${app_name} configuration settings"
+  _msg_info "$(_get "app" "name") configuration settings"
   _msg_info "                 Get date:   $(_get "get" "date")"
   _msg_info "                 PKGBUILD:   $(_get "target" "pkgbuild")"
   _msg_info "                 Variable:   $(_get "target" "variable")"
