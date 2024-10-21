@@ -3,6 +3,7 @@
 
 TERMUX_PREFIX=/data/data/com.termux
 
+_PROJECT=reallymakepkg
 PREFIX ?= /usr
 ifeq ($(TERMUX_VERSION),)
 PREFIX=$(TERMUX_PREFIX)/usr
@@ -11,9 +12,9 @@ endif
 
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
-DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/reallymakepkg
+DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/$(_PROJECT)
 
-FILES=$(wildcard reallymakepkg)
+FILES=$(wildcard $(_PROJECT))
 DOC_FILES=$(wildcard *.rst)
 
 all:
@@ -27,7 +28,8 @@ install: install-scripts install-doc
 
 install-scripts:
 
-	install -vDm 755 reallymakepkg/reallymakepkg "$(BIN_DIR)/reallymakepkg"
+	install -vDm 755 $(_PROJECT)/$(_PROJECT) "$(BIN_DIR)/$(_PROJECT)"
+	install -vDm 755 $(_PROJECT)/recipe-get "$(BIN_DIR)/recipe-get"
 
 install-doc:
 
@@ -35,7 +37,7 @@ install-doc:
 
 uninstall:
 
-	rm "$(BIN_DIR)/reallymakepkg"
+	rm "$(BIN_DIR)/$(_PROJECT)"
 
 
 .PHONY: check install install-scripts install-doc shellcheck uninstall

@@ -293,37 +293,15 @@ _termux_flags() {
 # Reads a variable from the PKGBUILD
 _recipe_get() {
   local \
-    _obj="${1}" \
-    _value \
-    _ref \
-    _type
-  _ref="${_obj}[@]"
-  _value="$( \
-    source \
-      "$( \
-        _get \
-          "work" \
-	  "dir")/PKGBUILD" && \
-    _type="$( \
-      _get_type \
-        "${_obj}")" && \
-    if \
-      [[ "${_type}" == "string" ]] || \
-      [[ "${_type}" == "array" ]]; then
-        printf \
-          "%s\n" \
-          "${!_ref}";
-    elif [[ "${_type}" == "undefined" ]]; then
-      _msg=( \
-	'PKGBUILD seems not to contain'
-	"the '${_obj} variable")
-    fi)"
-  # if [[ "${_msg[*]}" != "" ]]; then
-  #   _msg_info \
-  #     "${_msg[*]}"
-  # fi
-  echo \
-    "${_value}"
+    _variable="${1}" \
+    _pkgbuild
+  _pkgbuild="$( \
+    _get \
+      "work" \
+      "dir")/PKGBUILD"
+  recipe-get \
+    "${_pkgbuild}" \
+    "${_variable}"
 }
 
 # Roughly determines if a package

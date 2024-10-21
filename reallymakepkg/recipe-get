@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+_global_variables() {
+  target_pkgbuild=""
+  target_variable=""
+  color=""
+  quiet=""
+}
+
+# Reads a variable from the PKGBUILD
+_recipe_get() {
+  local \
+    _pkgbuild="${1}" \
+    _obj="${2}" \
+    _value \
+    _ref \
+    _type
+  _ref="${_obj}[@]"
+  _value="$( \
+    source \
+      "${_pkgbuild}" && \
+    _type="$( \
+      _get_type \
+        "${_obj}")" && \
+    if \
+      [[ "${_type}" == "string" ]] || \
+      [[ "${_type}" == "array" ]]; then
+        printf \
+          "%s\n" \
+          "${!_ref}";
+    elif [[ "${_type}" == "undefined" ]]; then
+      _msg=( \
+	'PKGBUILD seems not to contain'
+	"the '${_obj} variable")
+    fi)"
+  echo \
+    "${_value}"
+}
+
+_pkgbuild_auto_detect() {
+  echo \
+    "$(realpath \
+         "$(pwd)/PKGBUILD")"
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "get" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "target" \
+    "pkgbuild" \
+    "$(_pkgbuild_auto_detect)"
+  _set_override \
+    "target" \
+    "variable" \
+    "pkgbase"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      usage_text << \
+        ENDUSAGETEXT || true
+usage:
+
+  $(_get "app" "name")
+    [options]
+    <PKGBUILD> 
+    <variable>
+
+  options:
+     -h                   This message.
+     -c                   Enable colors
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  printf \
+    '%s\n' \
+    "$( \
+      _get \
+        "usage" \
+	"text")"
+  exit \
+    "${1}"
+}
+
+_display_flags() {
+  local \
+    _flags=(
+      ${1}
+    )
+  for _flag \
+    in "${_flags[@]}"; do
+  _msg_info "                              ${_flag}"
+  done
+}
+
+# Shows configuration options.
+_show_config() {
+  local \
+    build_date \
+    _pygmentize_opts=()
+  _pygmentize_opts=(
+    -l bash
+    -O style=emacs,linenos=1
+  )
+  TZ=UTC \
+    printf \
+      -v build_date \
+      '%(%FT%R%z)T' \
+      "${SOURCE_DATE_EPOCH}"
+  _msg_info "${app_name} configuration settings"
+  _msg_info "                 Get date:   $(_get "get" "date")"
+  _msg_info "                 PKGBUILD:   $(_get "target" "pkgbuild")"
+  _msg_info "                 Variable:   $(_get "target" "variable")"
+}
+
+_globals
+_global_variables
+
+while \
+  getopts \
+    'cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _usage \
+	   1 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+if (( "$#" < 2 )); then
+  _set_overrides
+  _usage \
+    1
+fi
+_set \
+  "target" \
+  "pkgbuild" \
+  "${1}"
+_set \
+  "target" \
+  "variable" \
+  "${2}"
+_set_overrides
+app_opts=(
+  "$(_get \
+      "target" \
+      "pkgbuild")"
+  "$(_get \
+      "target" \
+      "variable")"
+)
+_recipe_get \
+  "${app_opts[@]}" \
+  "${args[@]}"
