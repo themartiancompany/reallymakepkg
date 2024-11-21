@@ -5,8 +5,8 @@ TERMUX_PREFIX=/data/data/com.termux
 
 _PROJECT=reallymakepkg
 PREFIX ?= /usr
-ifeq ($(TERMUX_VERSION),)
-PREFIX=$(TERMUX_PREFIX)/usr
+ifeq ($(strip $(TERMUX_VERSION)),'')
+PREFIX := $(TERMUX_PREFIX)/usr
 endif
 
 
