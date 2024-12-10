@@ -116,6 +116,7 @@ _termux_err_flags() {
     _err \
     _cc
   _err_flags=(
+    "deprecated-declarations"
     "implicit-function-declaration"
     "language-extension-token"
     "register"
