@@ -24,20 +24,49 @@ check: shellcheck
 shellcheck:
 	shellcheck -s bash $(FILES)
 
-install: install-scripts install-doc
+install: install-scripts install-configs install-doc
 
 install-scripts:
 
-	install -vDm 755 $(_PROJECT)/$(_PROJECT) "$(BIN_DIR)/$(_PROJECT)"
-	install -vDm 755 $(_PROJECT)/recipe-get "$(BIN_DIR)/recipe-get"
+	install \
+	  -vDm755 \
+	  "$(_PROJECT)/$(_PROJECT)" \
+	  "$(BIN_DIR)/$(_PROJECT)"
+	install \
+	  -vDm755 \
+	  "$(_PROJECT)/recipe-get" \
+	  "$(BIN_DIR)/recipe-get"
+
+install-configs:
+
+	install \
+	  -vDm644 \
+	  "configs/makepkg.android.conf" \
+	  "$(DATA_DIR)/$(_PROJECT)/makepkg.android.conf"
+	install \
+	  -vDm644 \
+	  "configs/makepkg.gnu.conf" \
+	  "$(DATA_DIR)/$(_PROJECT)/makepkg.gnu.conf"
 
 install-doc:
 
-	install -vDm 644 $(DOC_FILES) -t $(DOC_DIR)
+	install \
+	  -vDm644 \
+	  $(DOC_FILES) \
+	  -t \
+	  $(DOC_DIR)
 
 uninstall:
 
-	rm "$(BIN_DIR)/$(_PROJECT)"
+	rm \
+	  "$(BIN_DIR)/$(_PROJECT)"
+	rm \
+	  "$(BIN_DIR)/recipe-get"
+	rm \
+	  -r \
+	  "$(DATA_DIR)/$(_PROJECT)"
+	rm \
+	  -r \
+	  "$(DOC_DIR)"
 
-
-.PHONY: check install install-scripts install-doc shellcheck uninstall
+.PHONY: check install install-scripts install-configs install-doc shellcheck uninstall

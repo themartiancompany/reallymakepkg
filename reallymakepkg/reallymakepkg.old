@@ -22,9 +22,8 @@ _global_variables() {
     CFLAGS=""
   [[ -v CXXFLAGS ]] || \
     CXXFLAGS=""
-  if [[ -z "TERMUX_VERSION" ]]; then
+  [[ -v TERMUX_VERSION ]] || \
     TERMUX_VERSION=""
-  fi
   termux_glib=""
   termux_libc=""
   work_dir=""
@@ -55,10 +54,10 @@ _reallymakepkg() {
   _args=(
     "$@"
   )
-  if [[ -v "TERMUX_VERSION" ]]; then
+  if [[ -n "${TERMUX_VERSION}" ]]; then
     _termux_makepkg \
       "${_args[@]}"
-  else
+  elif [[ ! -n "${TERMUX_VERSION}" ]]; then
     _show_config
     makepkg \
       "${_args[@]}"
@@ -116,15 +115,13 @@ _termux_err_flags() {
     _err \
     _cc
   _err_flags=(
-    "deprecated-declarations"
     "implicit-function-declaration"
-    # "incompatible-pointer-types"
-    "int-conversion"
     "language-extension-token"
-    # "overflow"
     "register"
-    "unused-but-set-variable"
     "unused-const-variable"
+    "int-conversion"
+    # "incompatible-pointer-types"
+    # "overflow"
   )
   _cc="$( \
     basename \
@@ -290,21 +287,43 @@ _termux_flags() {
       "${_ldflags[*]}")"
   export \
     CFLAGS+=" ${_cflags[*]}"
-    CXXFLAGS+=" ${_cflags[*]}"
+    # CXXFLAGS+=" ${_cflags[*]}"
 }
 
 # Reads a variable from the PKGBUILD
 _recipe_get() {
   local \
-    _variable="${1}" \
-    _pkgbuild
-  _pkgbuild="$( \
-    _get \
-      "work" \
-      "dir")/PKGBUILD"
-  recipe-get \
-    "${_pkgbuild}" \
-    "${_variable}"
+    _obj="${1}" \
+    _value \
+    _ref \
+    _type
+  _ref="${_obj}[@]"
+  _value="$( \
+    source \
+      "$( \
+        _get \
+          "work" \
+	  "dir")/PKGBUILD" && \
+    _type="$( \
+      _get_type \
+        "${_obj}")" && \
+    if \
+      [[ "${_type}" == "string" ]] || \
+      [[ "${_type}" == "array" ]]; then
+        printf \
+          "%s\n" \
+          "${!_ref}";
+    elif [[ "${_type}" == "undefined" ]]; then
+      _msg=( \
+	'PKGBUILD seems not to contain'
+	"the '${_obj} variable")
+    fi)"
+  # if [[ "${_msg[*]}" != "" ]]; then
+  #   _msg_info \
+  #     "${_msg[*]}"
+  # fi
+  echo \
+    "${_value}"
 }
 
 # Roughly determines if a package
