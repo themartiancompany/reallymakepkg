@@ -1,6 +1,7 @@
 # reallymakepkg
 
-Helps to seamlessly build pkgbuilds on many platforms.
+Helps to seamlessly build pkgbuilds on many platforms,
+in particular Life, DogeOS, Arch Linux, Android (Termux).
 
 ```bash
 reallymakepkg \

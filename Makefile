@@ -11,6 +11,7 @@ endif
 
 
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
+CONF_DIR=$(DESTDIR)$(PREFIX)/etc
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
 DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/$(_PROJECT)
 
@@ -42,11 +43,11 @@ install-configs:
 	install \
 	  -vDm644 \
 	  "configs/makepkg.android.conf" \
-	  "$(DATA_DIR)/$(_PROJECT)/makepkg.android.conf"
+	  "$(CONF_DIR)/$(_PROJECT)/makepkg.android.conf"
 	install \
 	  -vDm644 \
 	  "configs/makepkg.gnu.conf" \
-	  "$(DATA_DIR)/$(_PROJECT)/makepkg.gnu.conf"
+	  "$(CONF_DIR)/$(_PROJECT)/makepkg.gnu.conf"
 
 install-doc:
 
