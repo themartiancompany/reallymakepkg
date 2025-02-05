@@ -597,7 +597,7 @@ _build_quirk() {
         "Reverting..."
       sed \
         -i \
-        "s%${_pattern}%destdir=\$pkgdir%g" \
+        "s%${_pattern}%destdir=\"\${pkgdir}\"%g" \
         "${_recipe}"
     elif [[ "${_pattern}" == "" ]]; then
       _msg_warning \
@@ -633,7 +633,7 @@ _pip_quirk() {
         "Reverting..."
       sed \
         -i \
-        "s%${_pattern}%root=\$pkgdir%g" \
+        "s%${_pattern}%root=\"\${pkgdir}\"%g" \
         "${_recipe}"
     elif [[ "${_pattern}" == "" ]]; then
       _msg_warning \
@@ -660,8 +660,8 @@ _python_quirks() {
       true
     _setuptools_quirk || \
       true
-    # _pip_quirk || \
-    #  true
+    _pip_quirk || \
+     true
   fi
 }
 
