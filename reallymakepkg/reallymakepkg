@@ -775,9 +775,22 @@ _termux_makepkg() {
   _termux_flags
   _flags
   _show_config
-  makepkg \
-    "${_makepkg_opts[@]}" \
-    "${_args[@]}"
+  _msg=(
+    "Running makepkg with options"
+    "'${_args[*]} ${_makepkg_opts[*]}'"
+  )
+  _msg_info \
+    "${_msg[*]}"
+  if [[ "${quiet}" == "n" ]]; then
+    makepkg \
+      "${_args[@]}" \
+      "${_makepkg_opts[@]}"
+  elif [[ "${quiet}" == "y" ]]; then
+    makepkg \
+      "${_args[@]}" \
+      "${_makepkg_opts[@]}" \
+      2>/dev/null
+  fi
   if [[ $? -eq 0 ]] && \
      [[ "$(ls "./")"*".pkg."* != "" ]]; then
     mv \
