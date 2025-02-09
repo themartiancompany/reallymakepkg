@@ -747,7 +747,8 @@ _termux_makepkg() {
   _work_dir_non_empty="$( \
     ls \
       "${work_dir}/" \
-      2>/dev/null)"
+      2>/dev/null || \
+      true)"
   if [[ "${_work_dir_non_empty}" != "" ]]; then
     _msg=(
       "work directory '${work_dir}'"
