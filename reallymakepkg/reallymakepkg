@@ -899,12 +899,10 @@ _show_config() {
   _msg_info ""
   _msg_info "      PKGBUILD:"
   _msg_info ""
-  _sho \
+  _msg_info \
     "$( \
       cat \
-        'PKGBUILD')" \
-    "${_pygmentize_opts[@]}"
-
+        'PKGBUILD')"
 }
 
 _globals
