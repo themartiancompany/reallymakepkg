@@ -30,7 +30,7 @@ _recipe_get() {
     _ref \
     _type
   _ref="${_obj}[@]"
-  if [[ "${quiet}" == "n" ]]; then
+  if [[ "${quiet}" == "y" ]]; then
     _value="$( \
       source \
         "${_pkgbuild}" 2>/dev/null && \
