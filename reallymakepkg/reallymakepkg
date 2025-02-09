@@ -748,7 +748,7 @@ _termux_makepkg() {
       "work directory '${work_dir}'"
       "non-empty"
     )
-    _msg_warning \
+    _msg_info \
       "${_msg[*]}"
   elif [ ! -d "${work_dir}" ]; then
     mkdir \
