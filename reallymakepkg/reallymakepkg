@@ -765,7 +765,7 @@ _termux_makepkg() {
     -af \
     "$( \
       pwd)"/{"","."}* \
-    "${work_dir}" || \
+    "${work_dir}" 2>/dev/null || \
     true
   _libc_quirks
   _termux_quirks
