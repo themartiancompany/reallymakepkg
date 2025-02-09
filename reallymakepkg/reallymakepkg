@@ -31,6 +31,7 @@ _global_variables() {
   termux_libc=""
   work_dir=""
   pkgver_update=""
+  makepkg_args=()
   color=""
   quiet=""
 }
@@ -52,15 +53,15 @@ _reallymakepkg() {
   local \
     _update="${1}" \
     _makepkg_opts=() \
-    _args=()
+    _makepkg_args=()
   shift \
     1
-  _args=(
+  _makepkg_args=(
     "$@"
   )
   if [[ -v "TERMUX_VERSION" ]]; then
     _termux_makepkg \
-      "${_args[@]}"
+      "${_makepkg_args[@]}"
   else
     _makepkg_opts+=(
       --config
@@ -68,7 +69,8 @@ _reallymakepkg() {
     )
     _show_config
     makepkg \
-      "${_args[@]}"
+      "${_makepkg_opts[@]}" \
+      "${_makepkg_args[@]}"
   fi
   if [[ "${_update}" == true ]]; then
     _pkgver_update
@@ -735,9 +737,9 @@ _termux_makepkg() {
   local \
     _makepkg_opts=() \
     _msg=() \
-    _args=() \
+    _makepkg_args=() \
     _work_dir_non_empty
-  _args=(
+  _makepkg_args=(
     "$@"
   )
   _makepkg_opts+=(
@@ -777,18 +779,18 @@ _termux_makepkg() {
   _show_config
   _msg=(
     "Running makepkg with options"
-    "'${_args[*]} ${_makepkg_opts[*]}'"
+    "'${_makepkg_opts[*]} ${_makepkg_args[*]}'"
   )
   _msg_info \
     "${_msg[*]}"
   if [[ "${quiet}" == "n" ]]; then
     makepkg \
-      "${_args[@]}" \
-      "${_makepkg_opts[@]}"
+      "${_makepkg_opts[@]}" \
+      "${_makepkg_args[@]}"
   elif [[ "${quiet}" == "y" ]]; then
     makepkg \
-      "${_args[@]}" \
       "${_makepkg_opts[@]}" \
+      "${_makepkg_args[@]}" \
       2>/dev/null
   fi
   if [[ $? -eq 0 ]] && \
@@ -909,13 +911,15 @@ _show_config() {
   _display_flags                          "${CXXFLAGS}"
   _msg_info "                  LDFLAGS:   "
   _display_flags                          "${LDFLAGS}"
+  _msg_info "        Makepkg arguments:   "
+  _display_flags                          "${makepkg_args[*]}"
   _msg_info ""
   _msg_info "      PKGBUILD:"
   _msg_info ""
-  _msg_info \
-    "$( \
-      cat \
-        'PKGBUILD')"
+  # _msg_info \
+  #   "$( \
+  #     cat \
+  #       'PKGBUILD')"
 }
 
 _globals
@@ -943,15 +947,17 @@ while \
     ;;
   esac
 done
-
 shift \
   $(( \
     OPTIND - 1 \
   ))
-_args=(
+makepkg_args=(
   "$@"
 )
 _set_overrides
-_reallymakepkg \
+app_opts=(
   "${pkgver_update}"
-  "${_args[@]}"
+  "${makepkg_args[@]}"
+)
+_reallymakepkg \
+  "${app_opts[@]}"
