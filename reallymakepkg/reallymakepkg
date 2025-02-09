@@ -791,7 +791,7 @@ _termux_makepkg() {
     makepkg \
       "${_makepkg_opts[@]}" \
       "${_makepkg_args[@]}" \
-      2>/dev/null
+      1>/dev/null
   fi
   if [[ $? -eq 0 ]] && \
      [[ "$(ls "./")"*".pkg."* != "" ]]; then
