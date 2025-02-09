@@ -67,23 +67,6 @@ _recipe_get() {
           "the '${_obj} variable")
       fi)"
   fi
-  _value="$( \
-    source \
-      "${_pkgbuild}" && \
-    _type="$( \
-      _get_type \
-        "${_obj}")" && \
-    if \
-      [[ "${_type}" == "string" ]] || \
-      [[ "${_type}" == "array" ]]; then
-        printf \
-          "%s\n" \
-          "${!_ref}";
-    elif [[ "${_type}" == "undefined" ]]; then
-      _msg=( \
-	'PKGBUILD seems not to contain'
-	"the '${_obj} variable")
-    fi)"
   echo \
     "${_value}"
 }
