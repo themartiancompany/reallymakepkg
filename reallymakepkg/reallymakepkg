@@ -759,7 +759,8 @@ _termux_makepkg() {
     -af \
     "$( \
       pwd)"/{"","."}* \
-    "${work_dir}"
+    "${work_dir}" || \
+    true
   _libc_quirks
   _termux_quirks
   _python_quirks
@@ -876,8 +877,8 @@ _show_config() {
       '%(%FT%R%z)T' \
       "${SOURCE_DATE_EPOCH}"
   _msg_info "${app_name} configuration settings"
-  _msg_info "           Work directory:   $(_get "work" "dir")"
-  _msg_info "                     libc:   $(_get "termux" "libc")"
+  _msg_info "           Work directory:   ${work_dir}"
+  _msg_info "                     libc:   ${termux_libc}"
   _msg_info "                     arch:   $(uname -m)"
   _msg_info "                       os:   $(uname -o)"
   _msg_info "                       cc:   $(_get_cc)"
@@ -935,8 +936,5 @@ _args=(
 )
 _set_overrides
 _reallymakepkg \
-  "$( \
-    _get \
-      "pkgver" \
-      "update")" \
+  "${pkgver_update}"
   "${_args[@]}"

@@ -30,6 +30,43 @@ _recipe_get() {
     _ref \
     _type
   _ref="${_obj}[@]"
+  if [[ "${quiet}" == "n" ]]; then
+    _value="$( \
+      source \
+        "${_pkgbuild}" 2>/dev/null && \
+      _type="$( \
+        _get_type \
+          "${_obj}")" && \
+      if \
+        [[ "${_type}" == "string" ]] || \
+        [[ "${_type}" == "array" ]]; then
+          printf \
+            "%s\n" \
+            "${!_ref}";
+      elif [[ "${_type}" == "undefined" ]]; then
+        _msg=( \
+          'PKGBUILD seems not to contain'
+          "the '${_obj} variable")
+      fi)"
+  elif [[ "${quiet}" == "n" ]]; then
+    _value="$( \
+      source \
+        "${_pkgbuild}" && \
+      _type="$( \
+        _get_type \
+          "${_obj}")" && \
+      if \
+        [[ "${_type}" == "string" ]] || \
+        [[ "${_type}" == "array" ]]; then
+          printf \
+            "%s\n" \
+            "${!_ref}";
+      elif [[ "${_type}" == "undefined" ]]; then
+        _msg=( \
+          'PKGBUILD seems not to contain'
+          "the '${_obj} variable")
+      fi)"
+  fi
   _value="$( \
     source \
       "${_pkgbuild}" && \
@@ -175,12 +212,8 @@ _set \
   "${2}"
 _set_overrides
 app_opts=(
-  "$(_get \
-      "target" \
-      "pkgbuild")"
-  "$(_get \
-      "target" \
-      "variable")"
+  "${target_pkgbuild}"
+  "${target_variable}"
 )
 _recipe_get \
   "${app_opts[@]}" \
