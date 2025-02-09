@@ -735,7 +735,8 @@ _termux_makepkg() {
   local \
     _makepkg_opts=() \
     _msg=() \
-    _args=()
+    _args=() \
+    _work_dir_non_empty
   _args=(
     "$@"
   )
@@ -743,7 +744,11 @@ _termux_makepkg() {
     --config
       "${_etc}/reallymakepkg/makepkg.android.conf"  
   )
-  if [[ "$(ls "${work_dir}/")" != "" ]]; then
+  _work_dir_non_empty="$( \
+    ls \
+      "${work_dir}/" \
+      2>/dev/null)"
+  if [[ "${_work_dir_non_empty}" != "" ]]; then
     _msg=(
       "work directory '${work_dir}'"
       "non-empty"
