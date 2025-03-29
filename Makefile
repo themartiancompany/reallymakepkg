@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 #    ----------------------------------------------------------------------
-#    Copyright © 2025  Pellegrino Prevete
+#    Copyright © 2024, 2025  Pellegrino Prevete
 #
 #    All rights reserved
 #    ----------------------------------------------------------------------
@@ -27,53 +27,80 @@ ifeq ($(strip $(TERMUX_VERSION)),'')
 PREFIX := $(TERMUX_PREFIX)/usr
 endif
 
-
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 CONF_DIR=$(DESTDIR)$(PREFIX)/etc
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
 DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/$(_PROJECT)
+MAN_DIR?=$(DESTDIR)$(PREFIX)/share/man
 
 FILES=$(wildcard $(_PROJECT))
-DOC_FILES=$(wildcard *.rst)
+DOC_FILES=\
+  $(wildcard *.rst) \
+  $(wildcard *.md)
+
+_CHECK_TARGETS:=\
+  shellcheck
+_CHECK_TARGETS_ALL:=\
+  check \
+  $(_CHECK_TARGETS)
+_INSTALL_TARGETS:=\
+  install-scripts \
+  install-configs \
+  install-doc \
+  install-man
+_INSTALL_TARGETS_ALL:=\
+  install \
+  $(_INSTALL_TARGETS)
+_PHONY_TARGETS:=\
+  $(_CHECK_TARGETS_ALL) \
+  $(_INSTALL_TARGETS_ALL) \
+  uninstall
+
+_INSTALL_FILE=install -Dm644
+_INSTALL_DIR=install -dm755
+_INSTALL_EXE=install -Dm755
 
 all:
 
-check: shellcheck 
+check: $(_CHECK_TARGETS)
 
 shellcheck:
 	shellcheck -s bash $(FILES)
 
-install: install-scripts install-configs install-doc
+install: $(_INSTALL_TARGETS)
 
 install-scripts:
 
-	install \
-	  -vDm755 \
+	$(_INSTALL_EXE) \
 	  "$(_PROJECT)/$(_PROJECT)" \
 	  "$(BIN_DIR)/$(_PROJECT)"
-	install \
-	  -vDm755 \
+	$(_INSTALL_EXE) \
 	  "$(_PROJECT)/recipe-get" \
 	  "$(BIN_DIR)/recipe-get"
 
 install-configs:
 
-	install \
-	  -vDm644 \
+	$(_INSTALL_FILE) \
 	  "configs/makepkg.android.conf" \
 	  "$(CONF_DIR)/$(_PROJECT)/makepkg.android.conf"
-	install \
-	  -vDm644 \
+	$(_INSTALL_FILE) \
 	  "configs/makepkg.gnu.conf" \
 	  "$(CONF_DIR)/$(_PROJECT)/makepkg.gnu.conf"
 
 install-doc:
 
-	install \
-	  -vDm644 \
+	$(_INSTALL_FILE) \
 	  $(DOC_FILES) \
 	  -t \
 	  $(DOC_DIR)
+
+install-man:
+
+	$(_INSTALL_DIR) \
+	  "$(MAN_DIR)/man1"
+	rst2man \
+	  "man/$(_PROJECT).1.rst" \
+	  "$(MAN_DIR)/man1/$(_PROJECT).1"
 
 uninstall:
 
@@ -87,5 +114,7 @@ uninstall:
 	rm \
 	  -r \
 	  "$(DOC_DIR)"
+	rm \
+	  "$(MAN_DIR)/man1/$(PROJECT).1"
 
-.PHONY: check install install-scripts install-configs install-doc shellcheck uninstall
+.PHONY: $(_PHONY_TARGETS)

@@ -35,6 +35,7 @@ source \
   "${_lib}/libcrash-bash/crash-bash"
 
 _global_variables() {
+  build_date=""
   [[ -v LDFLAGS ]] || \
      LDFLAGS=""
   [[ -v CPPFLAGS ]] || \
@@ -49,6 +50,7 @@ _global_variables() {
   termux_glib=""
   termux_libc=""
   work_dir=""
+  config_file=""
   pkgver_update=""
   makepkg_args=()
   color=""
@@ -71,6 +73,7 @@ _pkgver_update() {
 _reallymakepkg() {
   local \
     _update="${1}" \
+    _config_file="${2}" \
     _makepkg_opts=() \
     _makepkg_args=()
   shift \
@@ -78,6 +81,10 @@ _reallymakepkg() {
   _makepkg_args=(
     "$@"
   )
+  if [[ -e "${_config_file}" ]]; then
+    source \
+      "${_config_file}"
+  fi
   if [[ -v "TERMUX_VERSION" ]]; then
     _termux_makepkg \
       "${_makepkg_args[@]}"
@@ -246,13 +253,8 @@ _termux_auto_flags() {
       -o)"
   [[ "${_os}" == 'GNU/Linux' ]] && \
     _libc="glibc" 
-  _set \
-    "termux" \
-    "libc" \
-    "${_libc}"
-  "_termux_$( \
-    _get "termux" \
-         "libc")_flags"
+  termux_libc="${_libc}"
+  "_termux_${termux_libc}_flags"
 }
 
 # Set glibc flags
@@ -326,10 +328,7 @@ _recipe_get() {
   local \
     _variable="${1}" \
     _pkgbuild
-  _pkgbuild="$( \
-    _get \
-      "work" \
-      "dir")/PKGBUILD"
+  _pkgbuild="${work_dir}/PKGBUILD"
   recipe-get \
     "${_pkgbuild}" \
     "${_variable}"
@@ -378,10 +377,7 @@ _is_setuptools_pkg() {
     _it_flag \
     _py2_flag \
     _recipe
-  _recipe="$( \
-    _get \
-      "work" \
-      "dir")/PKGBUILD" 
+  _recipe="${work_dir}/PKGBUILD" 
   _pkgname=( $( \
     _recipe_get \
       "pkgname")
@@ -810,7 +806,7 @@ _termux_makepkg() {
   _show_config
   _msg=(
     "Running makepkg with options"
-    "'${_makepkg_opts[*]} ${_makepkg_args[*]}'"
+    "'${_makepkg_opts[*]} ${_makepkg_args[*]}'."
   )
   _msg_info \
     "${_msg[*]}"
@@ -841,6 +837,24 @@ _termux_makepkg() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+  _set_override \
+    "build" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "config" \
+    "file" \
+    "${HOME}/.config/${app_name}/user.config"
   _set_override \
     "work" \
     "dir" \
@@ -859,16 +873,6 @@ _set_overrides() {
     "pkgver" \
     "update" \
     "n"
-  if [[ -v override_color ]]; then
-    color="${override_color}"
-  elif [[ -z "${color}" ]]; then
-    color="n"
-  fi
-  if [[ -v override_quiet ]]; then
-    quiet="${override_quiet}"
-  elif [[ -z "${quiet}" ]]; then
-    quiet="y"
-  fi
 }
 
 # Show help usage, with an exit status.
@@ -880,15 +884,26 @@ _usage() {
       -d '' \
       usage_text << \
         ENDUSAGETEXT || true
-usage: $(_get "app" "name") [options] [makepkg options]
+
+Cross-platform makepkg extension.
+
+usage:
+  ${app_name}
+    [options]
+    --
+    [makepkg options]
+
   options:
-     -w                   Builds the package in a
+     -C <config_file>     Configuration file to source
+                          before running makepkg.
+                          Default: '${config_file}'
+     -w <work_dir>        Builds the package in a
                           specific directory instead
-			  than in a temporary one.
-     -g                   C library to use in
+                          than in a temporary one.
+     -g <libc>            C library to use in
                           Termux environments
-			  ('glibc', 'bionic').
-		          Default: '$(_get "termux" "libc")'
+                          ('glibc', 'bionic').
+                          Default: '${termux_libc}'
 
      -h                   This message.
      -c                   Enable colors
@@ -896,10 +911,7 @@ usage: $(_get "app" "name") [options] [makepkg options]
 ENDUSAGETEXT
   printf \
     '%s\n' \
-    "$( \
-      _get \
-        "usage" \
-	"text")"
+    "${usage_text}"
   exit \
     "${1}"
 }
@@ -918,18 +930,13 @@ _display_flags() {
 # Shows configuration options.
 _show_config() {
   local \
-    build_date \
     _pygmentize_opts=()
   _pygmentize_opts=(
     -l bash
     -O style=emacs,linenos=1
   )
-  TZ=UTC \
-    printf \
-      -v build_date \
-      '%(%FT%R%z)T' \
-      "${SOURCE_DATE_EPOCH}"
   _msg_info "${app_name} configuration settings"
+  _msg_info "               Build date:   ${build_date}"
   _msg_info "           Work directory:   ${work_dir}"
   _msg_info "                     libc:   ${termux_libc}"
   _msg_info "                     arch:   $(uname -m)"
@@ -945,9 +952,9 @@ _show_config() {
   _display_flags                          "${LDFLAGS}"
   _msg_info "        Makepkg arguments:   "
   _display_flags                          "${makepkg_args[*]}"
-  _msg_info ""
-  _msg_info "      PKGBUILD:"
-  _msg_info ""
+  # _msg_info ""
+  # _msg_info "      PKGBUILD:"
+  # _msg_info ""
   # _msg_info \
   #   "$( \
   #     cat \
@@ -959,11 +966,12 @@ _global_variables
 
 while \
   getopts \
-    'w:g:ucvh?' \
+    'w:C:g:ucvh?' \
     arg; do
   case \
     "${arg}" in
     w) override_work_dir="${OPTARG}" ;;
+    C) override_config_file="${OPTARG}" ;;
     g) override_termux_libc="${OPTARG}" ;;
     u) override_pkgver_update="y" ;;
     c) override_color="y" ;;
@@ -989,6 +997,7 @@ makepkg_args=(
 _set_overrides
 app_opts=(
   "${pkgver_update}"
+  "${config_file}"
   "${makepkg_args[@]}"
 )
 _reallymakepkg \
