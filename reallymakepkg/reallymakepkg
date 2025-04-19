@@ -94,19 +94,8 @@ _reallymakepkg() {
     source \
       "${_config_file}"
   fi
-  if [[ -v "TERMUX_VERSION" ]]; then
-    _termux_makepkg \
-      "${_makepkg_args[@]}"
-  else
-    _makepkg_opts+=(
-      --config
-        "${_etc}/reallymakepkg/makepkg.gnu.conf"  
-    )
-    _show_config
-    makepkg \
-      "${_makepkg_opts[@]}" \
-      "${_makepkg_args[@]}"
-  fi
+  _makepkg \
+    "${_makepkg_args[@]}"
   if [[ "${_update}" == true ]]; then
     _pkgver_update
   fi
@@ -767,21 +756,9 @@ _termux_quirks() {
     "Detected Android app build; no edits to 'pkgdir'"
 }
 
-# Termux makepkg
-# $@:makepkg args
-_termux_makepkg() {
+_work_dir_setup() {
   local \
-    _makepkg_opts=() \
-    _msg=() \
-    _makepkg_args=() \
     _work_dir_non_empty
-  _makepkg_args=(
-    "$@"
-  )
-  _makepkg_opts+=(
-    --config
-      "${_etc}/reallymakepkg/makepkg.android.conf"  
-  )
   _work_dir_non_empty="$( \
     ls \
       "${work_dir}/" \
@@ -789,8 +766,8 @@ _termux_makepkg() {
       true)"
   if [[ "${_work_dir_non_empty}" != "" ]]; then
     _msg=(
-      "work directory '${work_dir}'"
-      "non-empty"
+      "Work directory '${work_dir}'"
+      "non-empty."
     )
     _msg_info \
       "${_msg[*]}"
@@ -805,13 +782,34 @@ _termux_makepkg() {
       pwd)"/{"","."}* \
     "${work_dir}" 2>/dev/null || \
     true
-  _libc_quirks
-  _termux_quirks
-  _python_quirks
+}
+
+# Internal makepkg
+# $@:makepkg args
+_makepkg() {
+  local \
+    _makepkg_opts=() \
+    _msg=() \
+    _makepkg_args=()
+  _makepkg_args=(
+    "$@"
+  )
+  _makepkg_opts+=(
+    --config
+      "${_etc}/reallymakepkg/makepkg.android.conf"  
+  )
+  _work_dir_setup
+  if [[ -v "TERMUX_VERSION" ]]; then
+    _libc_quirks
+    _termux_quirks
+    _python_quirks
+  fi
   cd \
     "${work_dir}"
-  _termux_flags
-  _flags
+  if [[ -v "TERMUX_VERSION" ]]; then
+    _termux_flags
+    _flags
+  fi
   _show_config
   _msg=(
     "Running makepkg with options"
