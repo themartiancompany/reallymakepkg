@@ -27,12 +27,21 @@ _bin="$( \
       command \
         -v \
 	  "env")")"
-_lib="${_bin}/../lib"
+_lib="$( \
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" 2>/dev/null || \
+  source \
+    "${_crash_bash}"
+
 _etc="$( \
   realpath \
     "${_bin}/../etc")"
-source \
-  "${_lib}/libcrash-bash/crash-bash"
+if [[ ! -v "TERMUX_VERSION" ]]; then
+  _etc="/etc" 
+fi
 
 _global_variables() {
   build_date=""
