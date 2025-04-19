@@ -86,7 +86,7 @@ _reallymakepkg() {
     _makepkg_opts=() \
     _makepkg_args=()
   shift \
-    1
+    2
   _makepkg_args=(
     "$@"
   )
@@ -790,13 +790,20 @@ _makepkg() {
   local \
     _makepkg_opts=() \
     _msg=() \
-    _makepkg_args=()
+    _makepkg_args=() \
+    _config_file \
+    _os
   _makepkg_args=(
     "$@"
   )
+  if [[ -v "TERMUX_VERSION" ]]; then
+    _config_file="${_etc}/reallymakepkg/makepkg.android.conf"  
+  else
+    _config_file="${_etc}/reallymakepkg/makepkg.gnu.conf"  
+  fi
   _makepkg_opts+=(
     --config
-      "${_etc}/reallymakepkg/makepkg.android.conf"  
+      "${_config_file}"
   )
   _work_dir_setup
   if [[ -v "TERMUX_VERSION" ]]; then
