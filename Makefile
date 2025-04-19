@@ -19,16 +19,18 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-TERMUX_PREFIX=/data/data/com.termux
+TERMUX_PREFIX ?= /data/data/com.termux
 
 _PROJECT=reallymakepkg
 PREFIX ?= /usr
+CONF_DIR=$(DESTDIR)/etc
+
 ifeq ($(strip $(TERMUX_VERSION)),'')
 PREFIX := $(TERMUX_PREFIX)/usr
+CONF_DIR=$(DESTDIR)$(PREFIX)/etc
 endif
 
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
-CONF_DIR=$(DESTDIR)$(PREFIX)/etc
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
 DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/$(_PROJECT)
 MAN_DIR?=$(DESTDIR)$(PREFIX)/share/man
