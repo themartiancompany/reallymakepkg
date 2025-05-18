@@ -903,6 +903,8 @@ _set_overrides() {
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
+  local \
+    _exit_code="${1}"
   IFS='' \
     read \
       -r \
@@ -940,7 +942,7 @@ ENDUSAGETEXT
     '%s\n' \
     "${usage_text}"
   exit \
-    "${1}"
+    "${_exit_code}"
 }
 
 _display_flags() {
@@ -992,24 +994,34 @@ _show_config() {
 _globals
 _global_variables
 
+_getopts='w:C:g:r:ucvh?'
 while \
   getopts \
-    'w:C:g:r:ucvh?' \
+    "${_getopts}" \
     arg; do
   case \
     "${arg}" in
-    w) override_work_dir="${OPTARG}" ;;
-    C) override_config_file="${OPTARG}" ;;
-    g) override_termux_libc="${OPTARG}" ;;
-    r) override_repo_dir="${OPTARG}" ;;
-    u) override_pkgver_update="y" ;;
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _usage \
-	   1 ;;
+    w) \
+      override_work_dir="${OPTARG}" ;;
+    C) \
+      override_config_file="${OPTARG}" ;;
+    g) \
+      override_termux_libc="${OPTARG}" ;;
+    r) \
+      override_repo_dir="${OPTARG}" ;;
+    u) \
+      override_pkgver_update="y" ;;
+    c) \
+      override_color="y" ;;
+    v) \
+      override_quiet="n" ;;
+    h|?) \
+      _set_overrides \
+      _usage \
+        0 ;;
     *)
     _msg_error \
-      "Invalid argument '${arg}'" \
+      "Invalid argument '${arg}'." \
       0
     _usage \
       1
