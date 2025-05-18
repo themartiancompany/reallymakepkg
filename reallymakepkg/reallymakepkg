@@ -59,6 +59,7 @@ _global_variables() {
   termux_glib=""
   termux_libc=""
   work_dir=""
+  repo_dir=""
   config_file=""
   pkgver_update=""
   makepkg_args=()
@@ -83,10 +84,11 @@ _reallymakepkg() {
   local \
     _update="${1}" \
     _config_file="${2}" \
+    _repo_dir="${3}" \
     _makepkg_opts=() \
     _makepkg_args=()
   shift \
-    2
+    3
   _makepkg_args=(
     "$@"
   )
@@ -95,6 +97,7 @@ _reallymakepkg() {
       "${_config_file}"
   fi
   _makepkg \
+    "${_repo_dir}" \
     "${_makepkg_args[@]}"
   if [[ "${_update}" == true ]]; then
     _pkgver_update
@@ -758,6 +761,7 @@ _termux_quirks() {
 
 _work_dir_setup() {
   local \
+    _repo_dir="${1}" \
     _work_dir_non_empty
   _work_dir_non_empty="$( \
     ls \
@@ -778,8 +782,7 @@ _work_dir_setup() {
   fi
   cp \
     -af \
-    "$( \
-      pwd)"/{"","."}* \
+    "${_repo_dir}/"{"","."}* \
     "${work_dir}" 2>/dev/null || \
     true
 }
@@ -788,11 +791,14 @@ _work_dir_setup() {
 # $@:makepkg args
 _makepkg() {
   local \
+    _repo_dir="${1}" \
     _makepkg_opts=() \
     _msg=() \
     _makepkg_args=() \
     _config_file \
     _os
+  shift \
+    1
   _makepkg_args=(
     "$@"
   )
@@ -805,7 +811,8 @@ _makepkg() {
     --config
       "${_config_file}"
   )
-  _work_dir_setup
+  _work_dir_setup \
+    "${_repo_dir}"
   if [[ -v "TERMUX_VERSION" ]]; then
     _libc_quirks
     _termux_quirks
@@ -880,6 +887,10 @@ _set_overrides() {
     "libc" \
     "auto"
   _set_override \
+    "repo" \
+    "dir" \
+    "$(pwd)"
+  _set_override \
     "termux" \
     "glib" \
     "false"
@@ -911,6 +922,8 @@ usage:
      -C <config_file>     Configuration file to source
                           before running makepkg.
                           Default: '${config_file}'
+     -r <repo_dir>        Build recipe repository directory.
+                          Default: '${repo_dir}'
      -w <work_dir>        Builds the package in a
                           specific directory instead
                           than in a temporary one.
@@ -951,6 +964,7 @@ _show_config() {
   )
   _msg_info "${app_name} configuration settings"
   _msg_info "               Build date:   ${build_date}"
+  _msg_info "     Repository directory:   ${repo_dir}"
   _msg_info "           Work directory:   ${work_dir}"
   _msg_info "                C library:   ${termux_libc}"
   _msg_info "             Architecture:   $(uname -m)"
@@ -980,13 +994,14 @@ _global_variables
 
 while \
   getopts \
-    'w:C:g:ucvh?' \
+    'w:C:g:r:ucvh?' \
     arg; do
   case \
     "${arg}" in
     w) override_work_dir="${OPTARG}" ;;
     C) override_config_file="${OPTARG}" ;;
     g) override_termux_libc="${OPTARG}" ;;
+    r) override_repo_dir="${OPTARG}" ;;
     u) override_pkgver_update="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -1012,6 +1027,7 @@ _set_overrides
 app_opts=(
   "${pkgver_update}"
   "${config_file}"
+  "${repo_dir}"
   "${makepkg_args[@]}"
 )
 _reallymakepkg \
