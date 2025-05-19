@@ -856,6 +856,25 @@ _makepkg() {
     "${OLDPWD}"
 }
 
+_target_platform_auto_detect() {
+  local \
+    _os \
+    _platform
+  _platform=""
+  _os="$( \
+    uname \
+      -a)"
+  if [[ "${_os}" == "Android" ]]; then
+    _platform="termux"
+  elif [[ "${_os}" == "GNU/Linux" ]]; then
+    _platform="arch"
+  fi
+  _set_override \
+    "target" \
+    "platform" \
+    "${_platform}"
+}
+
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
@@ -899,6 +918,7 @@ _set_overrides() {
     "pkgver" \
     "update" \
     "n"
+  _target_platform_auto_detect
 }
 
 # Show help usage, with an exit status.
