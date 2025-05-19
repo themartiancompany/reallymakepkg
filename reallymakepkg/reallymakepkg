@@ -58,6 +58,7 @@ _global_variables() {
   fi
   termux_glib=""
   termux_libc=""
+  target_platform=""
   work_dir=""
   repo_dir=""
   config_file=""
@@ -933,6 +934,10 @@ usage:
                           Termux environments
                           ('glibc', 'bionic').
                           Default: '${termux_libc}'
+     -P <platform>        Can be 'termux' or 'arch'.
+                          Default: '${target_platform}'
+     -u                   Whether to enable automatic
+                          'pkgver' update in the recipe.
 
      -h                   This message.
      -c                   Enable colors
@@ -972,6 +977,7 @@ _show_config() {
   _msg_info "             Architecture:   $(uname -m)"
   _msg_info "         Operating system:   $(uname -o)"
   _msg_info "                 Compiler:   $(_get_cc)"
+  _msg_info "           Target platfom:   ${target_platform}"
   _msg_info "                 CPPFLAGS:   "
   _display_flags                          "${CPPFLAGS}"
   _msg_info "                   CFLAGS:   "
@@ -994,7 +1000,7 @@ _show_config() {
 _globals
 _global_variables
 
-_getopts='w:C:g:r:ucvh?'
+_getopts='w:C:g:r:uP:cvh?'
 while \
   getopts \
     "${_getopts}" \
@@ -1011,6 +1017,8 @@ while \
       override_repo_dir="${OPTARG}" ;;
     u) \
       override_pkgver_update="y" ;;
+    P) \
+      override_target_platform="${OPTARG}" ;;
     c) \
       override_color="y" ;;
     v) \
