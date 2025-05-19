@@ -56,6 +56,9 @@ Options
 -g libc            C library to use in
                    Termux environments
                    ('glibc', 'bionic').
+-P platform        Can be 'termux' or 'arch'.
+-u                 Whether to enable automatic
+                   'pkgver' update in the recipe.
 
 -h                 Display help.
 -c                 Enable color output
