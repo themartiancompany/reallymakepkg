@@ -58,7 +58,9 @@ _global_variables() {
   fi
   termux_glib=""
   termux_libc=""
+  target_platform=""
   work_dir=""
+  repo_dir=""
   config_file=""
   pkgver_update=""
   linker_c=""
@@ -84,11 +86,12 @@ _reallymakepkg() {
   local \
     _update="${1}" \
     _config_file="${2}" \
-    _linker_c="${3}" \
+    _repo_dir="${3}" \
+    _linker_c="${4}"
     _makepkg_opts=() \
     _makepkg_args=()
   shift \
-    3
+    4
   _makepkg_args=(
     "$@"
   )
@@ -97,6 +100,7 @@ _reallymakepkg() {
       "${_config_file}"
   fi
   _makepkg \
+    "${_repo_dir}" \
     "${_makepkg_args[@]}"
   if [[ "${_update}" == true ]]; then
     _pkgver_update
@@ -760,6 +764,7 @@ _termux_quirks() {
 
 _work_dir_setup() {
   local \
+    _repo_dir="${1}" \
     _work_dir_non_empty
   _work_dir_non_empty="$( \
     ls \
@@ -780,8 +785,7 @@ _work_dir_setup() {
   fi
   cp \
     -af \
-    "$( \
-      pwd)"/{"","."}* \
+    "${_repo_dir}/"{"","."}* \
     "${work_dir}" 2>/dev/null || \
     true
 }
@@ -790,11 +794,14 @@ _work_dir_setup() {
 # $@:makepkg args
 _makepkg() {
   local \
+    _repo_dir="${1}" \
     _makepkg_opts=() \
     _msg=() \
     _makepkg_args=() \
     _config_file \
     _os
+  shift \
+    1
   _makepkg_args=(
     "$@"
   )
@@ -807,7 +814,8 @@ _makepkg() {
     --config
       "${_config_file}"
   )
-  _work_dir_setup
+  _work_dir_setup \
+    "${_repo_dir}"
   if [[ -v "TERMUX_VERSION" ]]; then
     _libc_quirks
     _termux_quirks
@@ -860,6 +868,25 @@ _linker_c_auto_detect() {
     "${_linker}"
 }
 
+_target_platform_auto_detect() {
+  local \
+    _os \
+    _platform
+  _platform=""
+  _os="$( \
+    uname \
+      -a)"
+  if [[ "${_os}" == "Android" ]]; then
+    _platform="termux"
+  elif [[ "${_os}" == "GNU/Linux" ]]; then
+    _platform="arch"
+  fi
+  _set_override \
+    "target" \
+    "platform" \
+    "${_platform}"
+}
+
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
@@ -892,6 +919,10 @@ _set_overrides() {
     "libc" \
     "auto"
   _set_override \
+    "repo" \
+    "dir" \
+    "$(pwd)"
+  _set_override \
     "termux" \
     "glib" \
     "false"
@@ -900,11 +931,14 @@ _set_overrides() {
     "pkgver" \
     "update" \
     "n"
+  _target_platform_auto_detect
 }
 
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
+  local \
+    _exit_code="${1}"
   IFS='' \
     read \
       -r \
@@ -924,6 +958,8 @@ usage:
      -C <config_file>     Configuration file to source
                           before running makepkg.
                           Default: '${config_file}'
+     -r <repo_dir>        Build recipe repository directory.
+                          Default: '${repo_dir}'
      -w <work_dir>        Builds the package in a
                           specific directory instead
                           than in a temporary one.
@@ -934,6 +970,10 @@ usage:
      -l <linker>          C linker to use in
                           Termux environments
                           ('ld', 'lld').
+     -P <platform>        Can be 'termux' or 'arch'.
+                          Default: '${target_platform}'
+     -u                   Whether to enable automatic
+                          'pkgver' update in the recipe.
 
      -h                   This message.
      -c                   Enable colors
@@ -943,7 +983,7 @@ ENDUSAGETEXT
     '%s\n' \
     "${usage_text}"
   exit \
-    "${1}"
+    "${_exit_code}"
 }
 
 _display_flags() {
@@ -967,12 +1007,14 @@ _show_config() {
   )
   _msg_info "${app_name} configuration settings"
   _msg_info "               Build date:   ${build_date}"
+  _msg_info "     Repository directory:   ${repo_dir}"
   _msg_info "           Work directory:   ${work_dir}"
   _msg_info "                C library:   ${termux_libc}"
   _msg_info "             Architecture:   $(uname -m)"
   _msg_info "         Operating system:   $(uname -o)"
   _msg_info "                 Compiler:   $(_get_cc)"
   _msg_info "                   Linker:   ${target_linker}"
+  _msg_info "           Target platfom:   ${target_platform}"
   _msg_info "                 CPPFLAGS:   "
   _display_flags                          "${CPPFLAGS}"
   _msg_info "                   CFLAGS:   "
@@ -995,27 +1037,41 @@ _show_config() {
 _globals
 _global_variables
 
+_getopts='w:C:g:r:ul:P:cvh?'
 while \
   getopts \
-    'w:C:g:l:ucvh?' \
+    "${_getopts}" \
     arg; do
   case \
     "${arg}" in
-    w) override_work_dir="${OPTARG}" ;;
-    C) override_config_file="${OPTARG}" ;;
-    g) override_termux_libc="${OPTARG}" ;;
-    l) override_linker_c="${OPTARG}" ;;
-    u) override_pkgver_update="y" ;;
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _usage \
-	   1 ;;
-    *)
-    _msg_error \
-      "Invalid argument '${arg}'" \
-      0
-    _usage \
-      1
+    w) \
+      override_work_dir="${OPTARG}" ;;
+    C) \
+      override_config_file="${OPTARG}" ;;
+    g) \
+      override_termux_libc="${OPTARG}" ;;
+    r) \
+      override_repo_dir="${OPTARG}" ;;
+    u) \
+      override_pkgver_update="y" ;;
+    l) \
+      override_linker_c="${OPTARG}" ;;
+    P) \
+      override_target_platform="${OPTARG}" ;;
+    c) \
+      override_color="y" ;;
+    v) \
+      override_quiet="n" ;;
+    h|?) \
+      _set_overrides \
+      _usage \
+        0 ;;
+    *) \
+      _msg_error \
+        "Invalid argument '${arg}'." \
+        0
+      _usage \
+        1
     ;;
   esac
 done
@@ -1030,6 +1086,7 @@ _set_overrides
 app_opts=(
   "${pkgver_update}"
   "${config_file}"
+  "${repo_dir}"
   "${linker_c}"
   "${makepkg_args[@]}"
 )

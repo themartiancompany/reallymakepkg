@@ -59,6 +59,9 @@ Options
 -l linker          C linker to use in
                    Termux environments
                    ('ld', 'lld').
+-P platform        Can be 'termux' or 'arch'.
+-u                 Whether to enable automatic
+                   'pkgver' update in the recipe.
 
 -h                 Display help.
 -c                 Enable color output
