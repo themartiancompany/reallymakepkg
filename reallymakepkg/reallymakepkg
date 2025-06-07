@@ -61,6 +61,7 @@ _global_variables() {
   work_dir=""
   config_file=""
   pkgver_update=""
+  linker_c=""
   makepkg_args=()
   color=""
   quiet=""
@@ -83,10 +84,11 @@ _reallymakepkg() {
   local \
     _update="${1}" \
     _config_file="${2}" \
+    _linker_c="${3}" \
     _makepkg_opts=() \
     _makepkg_args=()
   shift \
-    2
+    3
   _makepkg_args=(
     "$@"
   )
@@ -230,7 +232,7 @@ _termux_bionic_flags() {
     # These are actually for
     # clang/llvm and tied to how
     # termux has built them
-    -fuse-ld=lld
+    -fuse-ld="${_linker_c}"
     -rtlib=compiler-rt
     -unwindlib=libunwind
   )
@@ -848,6 +850,16 @@ _makepkg() {
     "${OLDPWD}"
 }
 
+_linker_c_auto_detect() {
+  local \
+    _linker
+  _linker="lld"
+  _set_override \
+    "linker" \
+    "c" \
+    "${_linker}"
+}
+
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
@@ -883,6 +895,7 @@ _set_overrides() {
     "termux" \
     "glib" \
     "false"
+  _linker_c_auto_detect
   _set_override \
     "pkgver" \
     "update" \
@@ -918,6 +931,9 @@ usage:
                           Termux environments
                           ('glibc', 'bionic').
                           Default: '${termux_libc}'
+     -l <linker>          C linker to use in
+                          Termux environments
+                          ('ld', 'lld').
 
      -h                   This message.
      -c                   Enable colors
@@ -956,6 +972,7 @@ _show_config() {
   _msg_info "             Architecture:   $(uname -m)"
   _msg_info "         Operating system:   $(uname -o)"
   _msg_info "                 Compiler:   $(_get_cc)"
+  _msg_info "                   Linker:   ${target_linker}"
   _msg_info "                 CPPFLAGS:   "
   _display_flags                          "${CPPFLAGS}"
   _msg_info "                   CFLAGS:   "
@@ -980,13 +997,14 @@ _global_variables
 
 while \
   getopts \
-    'w:C:g:ucvh?' \
+    'w:C:g:l:ucvh?' \
     arg; do
   case \
     "${arg}" in
     w) override_work_dir="${OPTARG}" ;;
     C) override_config_file="${OPTARG}" ;;
     g) override_termux_libc="${OPTARG}" ;;
+    l) override_linker_c="${OPTARG}" ;;
     u) override_pkgver_update="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -1012,6 +1030,7 @@ _set_overrides
 app_opts=(
   "${pkgver_update}"
   "${config_file}"
+  "${linker_c}"
   "${makepkg_args[@]}"
 )
 _reallymakepkg \

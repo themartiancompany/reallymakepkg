@@ -56,6 +56,9 @@ Options
 -g libc            C library to use in
                    Termux environments
                    ('glibc', 'bionic').
+-l linker          C linker to use in
+                   Termux environments
+                   ('ld', 'lld').
 
 -h                 Display help.
 -c                 Enable color output
