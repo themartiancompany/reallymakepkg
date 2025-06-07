@@ -1013,7 +1013,7 @@ _show_config() {
   _msg_info "             Architecture:   $(uname -m)"
   _msg_info "         Operating system:   $(uname -o)"
   _msg_info "                 Compiler:   $(_get_cc)"
-  _msg_info "                   Linker:   ${target_linker}"
+  _msg_info "                   Linker:   ${linker_c}"
   _msg_info "           Target platfom:   ${target_platform}"
   _msg_info "                 CPPFLAGS:   "
   _display_flags                          "${CPPFLAGS}"
