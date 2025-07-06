@@ -233,6 +233,7 @@ _termux_bionic_flags() {
     -landroid-posix-semaphore
     -landroid-spawn
     -landroid-sysv-semaphore
+    -landroid-wordexp
     # These are actually for
     # clang/llvm and tied to how
     # termux has built them
