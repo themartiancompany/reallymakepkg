@@ -846,8 +846,9 @@ _makepkg() {
       1>/dev/null \
       2>/dev/null
   fi
-  if [[ $? -eq 0 ]] && \
-     [[ "$(ls "./")"*".pkg."* != "" ]]; then
+  if ( [[ $? -eq 0 ]] && \
+       [[ "$(ls "./")"*".pkg."* != "" ]] ) || \
+       ( [[ " ${_makepkg_opts[*]} " == *" --nobuild "* ]] ); then
     mv \
       *".pkg."* \
       "${OLDPWD}"
