@@ -39,6 +39,7 @@ _sourced \
 _global_variables() {
   install_date=""
   input_file=""
+  output_file=""
   tree_dir=""
   shared_dir=""
   root_dir=""
@@ -62,6 +63,7 @@ _termux_install_shared() {
     _root_dir="${2}" \
     _tree_dir="${3}" \
     _shared_dir="${4}" \
+    _output_file="${5}" \
     _real_dir \
     _os \
     _android_sdcard \
@@ -94,7 +96,8 @@ _termux_install_shared() {
     # _retro_arch_android_saves_dir="${_pkgdir}${_android_sdcard}/RetroArch/saves/PCSX-ReARMed"
     ln \
       -s \
-      "${_real_dir}/${_uuid}.img" \
+      "${_real_dir}/${_output_file}" \
+      "${_root_dir}${_tree_dir}/${_output_file}"
       "${pkgdir}${_game_dir}/${_uuid}.img"
     ln \
       -s \
@@ -115,10 +118,6 @@ _termux_install_shared() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
-  _set_override \
-    "install" \
-    "date" \
-    "$(_get_date_human)"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -129,6 +128,14 @@ _set_overrides() {
   elif [[ -z "${quiet}" ]]; then
     quiet="y"
   fi
+  _set_override \
+    "install" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "output" \
+    "file" \
+    "${input_file}"
 }
 
 # Show help usage, with an exit status.
@@ -153,6 +160,7 @@ usage:
     <root_dir>
     <tree_dir>
     <shared_dir>
+    (<output_file>)
 
   arguments:
     input_file            The file to install.
@@ -164,6 +172,7 @@ usage:
     shared_dir            The destination path of the
                           file in the Android shared
                           directory.
+    output_file           Output file name.
 
   options:
      -h                   This message.
@@ -196,6 +205,7 @@ _show_config() {
   _msg_info "     Root directory:   ${root_dir}"
   _msg_info "     Tree directory:   ${tree_dir}"
   _msg_info "   Shared directory:   ${shared_dir}"
+  _msg_info "        Output file:   ${output_file}"
 }
 
 _globals
@@ -224,7 +234,7 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-if (( "$#" < 4 )); then
+if (( "$#" < 3 )); then
   _set_overrides
   _usage \
     1
@@ -239,6 +249,7 @@ app_opts=(
   "${root_dir}"
   "${tree_dir}"
   "${shared_dir}"
+  "${output_file}"
 )
 _termux_install_shared \
   "${app_opts[@]}"

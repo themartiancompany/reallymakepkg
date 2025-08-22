@@ -60,6 +60,8 @@ Arguments
                file in the Android shared
                directory.
 
+* *output_file* Output file name. 
+
 
 Options
 ========
