@@ -75,7 +75,7 @@ _termux_install_shared() {
     _install_opts=() \
     _mode
   if [[ "${quiet}" == "n" ]] then
-    _install_opts=+(
+    _install_opts+=(
       -v
     )
   fi
