@@ -43,6 +43,7 @@ _global_variables() {
   tree_dir=""
   shared_dir=""
   root_dir=""
+  file_execuable=""
   color=""
   quiet=""
 }
@@ -64,59 +65,56 @@ _termux_install_shared() {
     _tree_dir="${3}" \
     _shared_dir="${4}" \
     _output_file="${5}" \
+    _file_executable="${6}" \
+    _install_dir \
     _real_dir \
+    _pkgdir \
     _os \
     _android_sdcard \
-    _game_dir \
-    _rom_dir \
-    _rom_install_dir \
-    _retro_arch_android_saves_dir \
-    _msg=()
+    _msg=() \
+    _install_opts=() \
+    _mode
+  if [[ "${quiet}" == "n" ]] then
+    _install_opts=+(
+      -v
+    )
+  fi
   _os="$( \
     uname \
       -o)"
-  _game_dir="/usr/games/${_app_id}"
   _android_sdcard="/storage/emulated/0"
   install \
-    -vdm755 \
+    "${_install_opts[@]}" \
+    -dm755 \
     "${_root_dir}${_tree_dir}"
-  # install \
-  #   -vdm755 \
-  #   "${pkgdir}${_game_dir}"
   if [[ "${_os}" == "GNU/Linux" ]]; then
     _real_dir="${_tree_dir}"
     _install_dir="${_root_dir}${_real_dir}"
   elif [[ "${_os}" == "Android" ]]; then
     _real_dir="${_android_sdcard}/${_shared_dir}"
-    # _rom_dir="${_android_sdcard}/Android/media/${_app_id}"
     _pkgdir="$( \
       _pkgdir_get \
         "${_root_dir}")"
     _install_dir="${_pkgdir}${_real_dir}"
-    # _retro_arch_android_saves_dir="${_pkgdir}${_android_sdcard}/RetroArch/saves/PCSX-ReARMed"
     ln \
       -s \
       "${_real_dir}/${_output_file}" \
       "${_root_dir}${_tree_dir}/${_output_file}"
-      "${pkgdir}${_game_dir}/${_uuid}.img"
-    ln \
-      -s \
-      "${_rom_dir}/${_uuid}.img" \
-      "${pkgdir}${_game_dir}/${_uuid}.img"
-    ln \
-      -s \
-      "${_rom_dir}/${_uuid}.sub" \
-      "${pkgdir}${_game_dir}/${_uuid}.sub"
-    ln \
-      -s \
-      "${_rom_dir}/${_uuid}.sub" \
-      "${pkgdir}${_game_dir}/${_uuid}.sub"
   fi
-
+  if [[ "${_file_executable}" == "y" ]]; then
+    _mode="755"
+  elif [[ "${_file_executable}" == "n" ]]; then
+    _mode="644"
+  fi
+  _install_opts=(
+    -Dm"${_mode}"
+  )
+  install \
+    "${_install_opts[@]}" \
+    "${_input_file}" \
+    "${_install_dir}/${_output_file}"
 }
 
-# Set defaults and, if present, overrides
-# from arch-grub command line option parameters
 _set_overrides() {
   if [[ -v override_color ]]; then
     color="${override_color}"
@@ -135,7 +133,12 @@ _set_overrides() {
   _set_override \
     "output" \
     "file" \
-    "${input_file}"
+    "$(basename \
+         "${input_file}")"
+  _set_override \
+    "file" \
+    "executable" \
+    "n"
 }
 
 # Show help usage, with an exit status.
@@ -152,6 +155,7 @@ _usage() {
 
 Seamlessly install Termux files in Android shared storage area.
 
+
 usage:
 
   ${app_name}
@@ -161,6 +165,7 @@ usage:
     <tree_dir>
     <shared_dir>
     (<output_file>)
+
 
   arguments:
     input_file            The file to install.
@@ -174,7 +179,11 @@ usage:
                           directory.
     output_file           Output file name.
 
+
   options:
+     -x                   Whether to make the file
+                          executable on install.
+
      -h                   This message.
      -c                   Enable colors
      -v                   Enable verbose output
@@ -205,6 +214,7 @@ _show_config() {
   _msg_info "     Root directory:   ${root_dir}"
   _msg_info "     Tree directory:   ${tree_dir}"
   _msg_info "   Shared directory:   ${shared_dir}"
+  _msg_info "         Executable:   ${file_executable}"
   _msg_info "        Output file:   ${output_file}"
 }
 
@@ -213,10 +223,11 @@ _global_variables
 
 while \
   getopts \
-    'cvh?' \
+    'xcvh?' \
     arg; do
   case \
     "${arg}" in
+    x) override_file_executable="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _usage \
@@ -234,7 +245,7 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-if (( "$#" < 3 )); then
+if (( "$#" < 4 )); then
   _set_overrides
   _usage \
     1
@@ -243,6 +254,9 @@ input_file="${1}"
 root_dir="${2}"
 tree_dir="${3}"
 shared_dir="${4}"
+if (( 4 < "$#" )); then
+  output_file="${5}"
+fi
 _set_overrides
 app_opts=(
   "${input_file}"
@@ -250,6 +264,7 @@ app_opts=(
   "${tree_dir}"
   "${shared_dir}"
   "${output_file}"
+  "${file_executable}"
 )
 _termux_install_shared \
   "${app_opts[@]}"
