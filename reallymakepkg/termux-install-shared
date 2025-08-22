@@ -43,7 +43,7 @@ _global_variables() {
   tree_dir=""
   shared_dir=""
   root_dir=""
-  file_execuable=""
+  file_executable=""
   color=""
   quiet=""
 }
