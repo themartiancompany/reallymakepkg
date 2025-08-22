@@ -58,15 +58,22 @@ _PHONY_TARGETS:=\
   $(_INSTALL_TARGETS_ALL) \
   uninstall
 
-_INSTALL_FILE=install -Dm644
-_INSTALL_DIR=install -dm755
-_INSTALL_EXE=install -Dm755
+_INSTALL_FILE=\
+  install \
+    -vDm644
+_INSTALL_DIR=\
+  install \
+    -vdm755
+_INSTALL_EXE=\
+  install \
+    -vDm755
 
 all:
 
 check: $(_CHECK_TARGETS)
 
 shellcheck:
+
 	shellcheck -s bash $(FILES)
 
 install: $(_INSTALL_TARGETS)
@@ -119,6 +126,8 @@ uninstall:
 	  "$(BIN_DIR)/$(_PROJECT)"
 	rm \
 	  "$(BIN_DIR)/recipe-get"
+	rm \
+	  "$(BIN_DIR)/termux-install-shared"
 	rm \
 	  -r \
 	  "$(DATA_DIR)/$(_PROJECT)"
