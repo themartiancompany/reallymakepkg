@@ -79,6 +79,9 @@ install-scripts:
 	$(_INSTALL_EXE) \
 	  "$(_PROJECT)/recipe-get" \
 	  "$(BIN_DIR)/recipe-get"
+	$(_INSTALL_EXE) \
+	  "$(_PROJECT)/termux-install-shared" \
+	  "$(BIN_DIR)/termux-install-shared"
 
 install-configs:
 
@@ -103,6 +106,12 @@ install-man:
 	rst2man \
 	  "man/$(_PROJECT).1.rst" \
 	  "$(MAN_DIR)/man1/$(_PROJECT).1"
+	rst2man \
+	  "man/recipe-get.1.rst" \
+	  "$(MAN_DIR)/man1/recipe-get.1"
+	rst2man \
+	  "man/termux-install-shared.1.rst" \
+	  "$(MAN_DIR)/man1/termux-install-shared.1"
 
 uninstall:
 

@@ -37,86 +37,34 @@ _sourced \
     "${_crash_bash}"
 
 _global_variables() {
-  get_date=""
-  target_pkgbuild=""
-  target_variable=""
+  install_date=""
+  tree_dir=""
+  shared_dir=""
+  root_dir=""
   color=""
   quiet=""
 }
 
-# Reads a variable from the PKGBUILD
-_recipe_get() {
+# Installs a file in the Android shared
+# directory tree and creates a corresponding
+# link in the root directory tree.
+_termux_install_shared() {
   local \
-    _pkgbuild="${1}" \
-    _obj="${2}" \
-    _value \
-    _ref \
-    _type
-  _ref="${_obj}[@]"
-  if [[ "${quiet}" == "y" ]]; then
-    _value="$( \
-      source \
-        "${_pkgbuild}" 2>/dev/null && \
-      _type="$( \
-        _get_type \
-          "${_obj}")" && \
-      if \
-        [[ "${_type}" == "string" ]] || \
-        [[ "${_type}" == "array" ]]; then
-          printf \
-            "%s\n" \
-            "${!_ref}";
-      elif [[ "${_type}" == "undefined" ]]; then
-        _msg=( \
-          'PKGBUILD seems not to contain'
-          "the '${_obj} variable"
-        )
-      fi)"
-  elif [[ "${quiet}" == "n" ]]; then
-    _value="$( \
-      source \
-        "${_pkgbuild}" && \
-      _type="$( \
-        _get_type \
-          "${_obj}")" && \
-      if \
-        [[ "${_type}" == "string" ]] || \
-        [[ "${_type}" == "array" ]]; then
-          printf \
-            "%s\n" \
-            "${!_ref}";
-      elif [[ "${_type}" == "undefined" ]]; then
-        _msg=(
-          'PKGBUILD seems not to contain'
-          "the '${_obj} variable"
-        )
-      fi)"
-  fi
+    _root_dir="${1}" \
+    _tree_dir="${2}" \
+    _shared_dir="${3}" \
+    _msg=()
   echo \
-    "${_value}"
-}
-
-_pkgbuild_auto_detect() {
-  echo \
-    "$(realpath \
-         "$(pwd)/PKGBUILD")"
+    "hi"
 }
 
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
   _set_override \
-    "get" \
+    "install" \
     "date" \
     "$(_get_date_human)"
-  _set_override \
-    "target" \
-    "pkgbuild" \
-    "$(_pkgbuild_auto_detect)"
-  _set_override \
-    "target" \
-    "variable" \
-    "pkgbase"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -132,6 +80,8 @@ _set_overrides() {
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
+  local \
+    _exit_code="${1}"
   IFS='' \
     read \
       -r \
@@ -139,14 +89,25 @@ _usage() {
       usage_text << \
         ENDUSAGETEXT || true
 
-Reads a variable from a PKGBUILD.
+Seamlessly install Termux files in Android shared storage area.
 
 usage:
 
   ${app_name}
     [options]
-    <PKGBUILD> 
-    <variable>
+    <root_dir>
+    <tree_dir>
+    <shared_dir>
+
+  arguments:
+    root_dir              The value of the 'pkgdir'
+                          variable in the PKGBUILD.
+    tree_dir              The destination path of the 
+                          file in the Termux tree at
+                          which to place the link.
+    shared_dir            The destination path of the
+                          file in the Android shared
+                          directory.
 
   options:
      -h                   This message.
@@ -157,7 +118,7 @@ ENDUSAGETEXT
     '%s\n' \
     "${usage_text}"
   exit \
-    "${1}"
+    "${_exit_code}"
 }
 
 _display_flags() {
@@ -174,9 +135,10 @@ _display_flags() {
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration settings"
-  _msg_info "                 Get date:   ${get_date}"
-  _msg_info "                 PKGBUILD:   ${target_pkgbuild}"
-  _msg_info "                 Variable:   ${target_variable}"
+  _msg_info "       Install date:   ${install_date}"
+  _msg_info "     Root directory:   ${root_dir}"
+  _msg_info "     Tree directory:   ${tree_dir}"
+  _msg_info "   Shared directory:   ${shared_dir}"
 }
 
 _globals
@@ -205,18 +167,19 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-if (( "$#" < 2 )); then
+if (( "$#" < 3 )); then
   _set_overrides
   _usage \
     1
 fi
-target_pkgbuild="${1}"
-target_variable="${2}"
+root_dir="${1}"
+tree_dir="${2}"
+shared_dir="${3}"
 _set_overrides
 app_opts=(
-  "${target_pkgbuild}"
-  "${target_variable}"
+  "${root_dir}"
+  "${tree_dir}"
+  "${shared_dir}"
 )
-_recipe_get \
-  "${app_opts[@]}" \
-  "${args[@]}"
+_termux_install_shared \
+  "${app_opts[@]}"

@@ -21,12 +21,12 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-==============
-reallymakepkg
-==============
+======================
+termux-install-shared
+======================
 
 -------------------------------------
-Cross-platform makepkg extension
+C
 -------------------------------------
 :Version: reallymakepkg |version|
 :Manual section: 1
@@ -34,34 +34,32 @@ Cross-platform makepkg extension
 Synopsis
 ========
 
-reallymakepkg *[options]* -- *[makepkg_opts]*
+termux-install-shared *[options]* -- *root_dir* *tree_dir* *shared_dir*
 
 Description
 ===========
 
-Cross-platform makepkg extension.
+Seamlessly install Termux files in Android
+shared storage area.
 
-Reallymakepkg is the reference build tool
-for Ur universal recipes and so the reference
-build tool for Life and DogeOS programs.
+
+Arguments
+===========
+
+* *root_dir* The value of the 'pkgdir'
+             variable in the PKGBUILD.
+
+* *tree_dir* The destination path of the 
+             file in the Termux tree at
+             which to place the link.
+
+* *shared_dir* The destination path of the
+               file in the Android shared
+               directory.
+
 
 Options
 ========
-
--C config_file     Configuration file to source
-                   before running makepkg.
--w work_dir        Builds the package in a
-                   specific directory instead
-                   than in a temporary one.
--g libc            C library to use in
-                   Termux environments
-                   ('glibc', 'bionic').
--l linker          C linker to use in
-                   Termux environments
-                   ('ld', 'lld').
--P platform        Can be 'termux' or 'arch'.
--u                 Whether to enable automatic
-                   'pkgver' update in the recipe.
 
 -h                 Display help.
 -c                 Enable color output
@@ -80,8 +78,7 @@ Copyright Pellegrino Prevete. AGPL-3.0.
 See also
 ========
 
-* recipe-get
-* termux-install-shared
+* reallymakepkg
 * ur
 * lur
 * fur
