@@ -38,6 +38,7 @@ _sourced \
 
 _global_variables() {
   install_date=""
+  input_file=""
   tree_dir=""
   shared_dir=""
   root_dir=""
@@ -45,17 +46,70 @@ _global_variables() {
   quiet=""
 }
 
+_pkgdir_get() {
+  local \
+    _pkgdir="${1}"
+  realpath \
+    "${_pkgdir%${TERMUX_PREFIX}}"
+}
+
 # Installs a file in the Android shared
 # directory tree and creates a corresponding
 # link in the root directory tree.
 _termux_install_shared() {
   local \
-    _root_dir="${1}" \
-    _tree_dir="${2}" \
-    _shared_dir="${3}" \
+    _input_file="${1}" \
+    _root_dir="${2}" \
+    _tree_dir="${3}" \
+    _shared_dir="${4}" \
+    _real_dir \
+    _os \
+    _android_sdcard \
+    _game_dir \
+    _rom_dir \
+    _rom_install_dir \
+    _retro_arch_android_saves_dir \
     _msg=()
-  echo \
-    "hi"
+  _os="$( \
+    uname \
+      -o)"
+  _game_dir="/usr/games/${_app_id}"
+  _android_sdcard="/storage/emulated/0"
+  install \
+    -vdm755 \
+    "${_root_dir}${_tree_dir}"
+  # install \
+  #   -vdm755 \
+  #   "${pkgdir}${_game_dir}"
+  if [[ "${_os}" == "GNU/Linux" ]]; then
+    _real_dir="${_tree_dir}"
+    _install_dir="${_root_dir}${_real_dir}"
+  elif [[ "${_os}" == "Android" ]]; then
+    _real_dir="${_android_sdcard}/${_shared_dir}"
+    # _rom_dir="${_android_sdcard}/Android/media/${_app_id}"
+    _pkgdir="$( \
+      _pkgdir_get \
+        "${_root_dir}")"
+    _install_dir="${_pkgdir}${_real_dir}"
+    # _retro_arch_android_saves_dir="${_pkgdir}${_android_sdcard}/RetroArch/saves/PCSX-ReARMed"
+    ln \
+      -s \
+      "${_real_dir}/${_uuid}.img" \
+      "${pkgdir}${_game_dir}/${_uuid}.img"
+    ln \
+      -s \
+      "${_rom_dir}/${_uuid}.img" \
+      "${pkgdir}${_game_dir}/${_uuid}.img"
+    ln \
+      -s \
+      "${_rom_dir}/${_uuid}.sub" \
+      "${pkgdir}${_game_dir}/${_uuid}.sub"
+    ln \
+      -s \
+      "${_rom_dir}/${_uuid}.sub" \
+      "${pkgdir}${_game_dir}/${_uuid}.sub"
+  fi
+
 }
 
 # Set defaults and, if present, overrides
@@ -95,11 +149,13 @@ usage:
 
   ${app_name}
     [options]
+    <input_file>
     <root_dir>
     <tree_dir>
     <shared_dir>
 
   arguments:
+    input_file            The file to install.
     root_dir              The value of the 'pkgdir'
                           variable in the PKGBUILD.
     tree_dir              The destination path of the 
@@ -136,6 +192,7 @@ _display_flags() {
 _show_config() {
   _msg_info "${app_name} configuration settings"
   _msg_info "       Install date:   ${install_date}"
+  _msg_info "         Input file:   ${input_file}"
   _msg_info "     Root directory:   ${root_dir}"
   _msg_info "     Tree directory:   ${tree_dir}"
   _msg_info "   Shared directory:   ${shared_dir}"
@@ -167,16 +224,18 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-if (( "$#" < 3 )); then
+if (( "$#" < 4 )); then
   _set_overrides
   _usage \
     1
 fi
-root_dir="${1}"
-tree_dir="${2}"
-shared_dir="${3}"
+input_file="${1}"
+root_dir="${2}"
+tree_dir="${3}"
+shared_dir="${4}"
 _set_overrides
 app_opts=(
+  "${input_file}"
   "${root_dir}"
   "${tree_dir}"
   "${shared_dir}"

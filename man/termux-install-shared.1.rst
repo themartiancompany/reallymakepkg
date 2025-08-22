@@ -28,13 +28,13 @@ termux-install-shared
 -------------------------------------
 C
 -------------------------------------
-:Version: reallymakepkg |version|
+:Version: termux-install-shared |version|
 :Manual section: 1
 
 Synopsis
 ========
 
-termux-install-shared *[options]* -- *root_dir* *tree_dir* *shared_dir*
+termux-install-shared *[options]* -- *input_file* *root_dir* *tree_dir* *shared_dir*
 
 Description
 ===========
@@ -45,6 +45,9 @@ shared storage area.
 
 Arguments
 ===========
+
+
+* *input_file* The file to install.
 
 * *root_dir* The value of the 'pkgdir'
              variable in the PKGBUILD.
