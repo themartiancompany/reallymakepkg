@@ -23,12 +23,14 @@ TERMUX_PREFIX ?= /data/data/com.termux
 
 _PROJECT=reallymakepkg
 PREFIX ?= /usr
-CONF_DIR=$(DESTDIR)/etc
 
 ifeq ($(strip $(TERMUX_VERSION)),'')
-PREFIX := $(TERMUX_PREFIX)/usr
-CONF_DIR=$(DESTDIR)$(TERMUX_PREFIX)/etc
+  PREFIX := $(TERMUX_PREFIX)/usr
+  CONF_DIR=$(DESTDIR)$(TERMUX_PREFIX)/etc
+else
+  CONF_DIR=$(DESTDIR)/etc
 endif
+
 
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
