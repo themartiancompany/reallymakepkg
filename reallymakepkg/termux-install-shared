@@ -50,9 +50,11 @@ _global_variables() {
 
 _pkgdir_get() {
   local \
-    _pkgdir="${1}"
+    _pkgdir="${1}" \
+    _TERMUX_PREFIX
+  _TERMUX_PREFIX="/data/data/com.termux/files"
   realpath \
-    "${_pkgdir%${TERMUX_PREFIX}}"
+    "${_pkgdir%${_TERMUX_PREFIX}}"
 }
 
 # Installs a file in the Android shared
