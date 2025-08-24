@@ -27,7 +27,7 @@ CONF_DIR ?= $(DESTDIR)/etc
 
 ifeq ($(strip $(TERMUX_VERSION)),'')
 PREFIX := $(TERMUX_PREFIX)/usr
-CONF_DIR := $(TERMUX_PREFIX)/etc
+CONF_DIR := $(DESTDIR)/$(TERMUX_PREFIX)/etc
 endif
 
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
