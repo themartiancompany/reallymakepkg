@@ -53,8 +53,10 @@ _pkgdir_get() {
     _pkgdir="${1}" \
     _TERMUX_PREFIX
   _TERMUX_PREFIX="/data/data/com.termux/files"
+  # realpath \
+  #   "${_pkgdir%${_TERMUX_PREFIX}}"
   realpath \
-    "${_pkgdir%${_TERMUX_PREFIX}}"
+    "${_pkgdir}/../../../../"
 }
 
 # Installs a file in the Android shared
