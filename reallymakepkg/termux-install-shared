@@ -262,6 +262,7 @@ if (( 4 < "$#" )); then
   output_file="${5}"
 fi
 _set_overrides
+_show_config
 app_opts=(
   "${input_file}"
   "${root_dir}"
