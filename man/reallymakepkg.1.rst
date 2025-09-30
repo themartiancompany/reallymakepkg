@@ -80,6 +80,7 @@ Copyright Pellegrino Prevete. AGPL-3.0.
 See also
 ========
 
+* package-info-get
 * recipe-get
 * termux-install-shared
 * ur

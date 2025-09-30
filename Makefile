@@ -86,6 +86,9 @@ install-scripts:
 	  "$(_PROJECT)/$(_PROJECT)" \
 	  "$(BIN_DIR)/$(_PROJECT)"
 	$(_INSTALL_EXE) \
+	  "$(_PROJECT)/package-info-get" \
+	  "$(BIN_DIR)/package-info-get"
+	$(_INSTALL_EXE) \
 	  "$(_PROJECT)/recipe-get" \
 	  "$(BIN_DIR)/recipe-get"
 	$(_INSTALL_EXE) \

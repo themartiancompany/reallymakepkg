@@ -64,6 +64,7 @@ See also
 ========
 
 * reallymakepkg
+* package-info-get
 * termux-install-shared
 * ur
 * lur

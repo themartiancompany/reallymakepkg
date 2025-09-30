@@ -1,0 +1,260 @@
+#!/usr/bin/env bash
+
+# SPDX-License-Identifier: AGPL-3.0
+
+#    ----------------------------------------------------------------------
+#    Copyright © 2024, 2025  Pellegrino Prevete
+#
+#    All rights reserved
+#    ----------------------------------------------------------------------
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+        "env")")"
+_lib="$( \
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" 2>/dev/null || \
+  source \
+    "${_crash_bash}"
+
+_global_variables() {
+  get_date=""
+  target_package=""
+  target_variable=""
+  cache_dir=""
+  color=""
+  quiet=""
+}
+
+# Reads a variable from the PKGBUILD
+_package_info_get() {
+  local \
+    _package="${1}" \
+    _obj="${2}" \
+    _cache_dir="${3}" \
+    _variables=() \
+    _variables_string \
+    _value \
+    _ref \
+    _type \
+    _tar_extract_opts \
+    _tar_opts=()
+  _tar_extract_opts="xf"
+  if [[ "${quiet}" == "n" ]]; then
+    _tar_extract_opts+="v"
+  fi
+  _tar_opts=(
+    "${_tar_extract_opts}" 
+    "${_package}"
+    ".PKGINFO" \
+    --to-stdout
+  )
+  _variables_string="$( \
+    tar \
+      "${_tar_opts[@]}" || \
+    true)"
+  IFS=$'\n' \
+  read \
+    -d '' \
+    -r \
+    -a \
+    _variables <<< \
+    "${_variables_string}" || \
+  true
+  for _variable in "${_variables[@]}"; do
+    # echo \
+    #   "${_variable}"
+    if [[ "${_variable}" == "${_obj} = "* ]]; then
+      echo \
+        "${_variable#${_obj} = }"
+    fi
+  done
+}
+
+_package_auto_detect() {
+  local \
+    _package \
+    _packages=()
+  _package="${target_package}"
+  if [[ "${_package}" == "" ]]; then
+    for _package in "$(pwd)/"*; do
+      _packages+=(
+        "${_package}"
+      )
+    done 
+    if (( 1 < "${#_packages[@]}" )); then
+      _msg=(
+        "Found packages"
+        "'${_packages[*]}',"
+        "Select a single"
+        "package file."
+      )
+      _msg_error \
+        "${_msg[*]}" \
+        1
+    fi
+  fi
+  _set_override \
+    "target" \
+    "package" \
+    "${_package}"
+}
+
+_cache_dir_auto_detect() {
+  local \
+    _dir
+  _dir="${HOME}/.cache/package-info-get"
+  if [[ ! -v "override_cache_dir" ]]; then
+    if [[ ! -d "${_dir}" ]]; then
+      mkdir \
+        -p \
+        "${_dir}"
+      chmod \
+        700 \
+        "${_dir}"
+    fi
+  fi
+  _set_override \
+    "cache" \
+    "dir" \
+    "${_dir}"
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "get" \
+    "date" \
+    "$(_get_date_human)"
+  _package_auto_detect
+  _cache_dir_auto_detect
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      usage_text << \
+        ENDUSAGETEXT || true
+
+Reads a variable from a package file.
+
+usage:
+
+  ${app_name}
+    [options]
+    <package> 
+    <variable>
+
+  options:
+     -h                   This message.
+     -c                   Enable colors
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  printf \
+    '%s\n' \
+    "${usage_text}"
+  exit \
+    "${1}"
+}
+
+_display_flags() {
+  local \
+    _flags=(
+      ${1}
+    )
+  for _flag \
+    in "${_flags[@]}"; do
+  _msg_info "                              ${_flag}"
+  done
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration settings"
+  _msg_info "                 Get date:   ${get_date}"
+  _msg_info "                  Package:   ${target_package}"
+  _msg_info "                 Variable:   ${target_variable}"
+}
+
+_globals
+_global_variables
+
+while \
+  getopts \
+    'cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _usage \
+	   1 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'." \
+      0
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+if (( "$#" < 1 )); then
+  _set_overrides
+  _usage \
+    1
+fi
+target_package="${1}"
+if (( "$#" < 2 )); then
+  target_variable="depend"
+fi
+if (( 1 < "$#" )); then
+  target_variable="${2}"
+fi
+_set_overrides
+_show_config
+app_opts=(
+  "${target_package}"
+  "${target_variable}"
+  "${cache_dir}"
+)
+_package_info_get \
+  "${app_opts[@]}" \
+  "${args[@]}"
