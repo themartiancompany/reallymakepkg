@@ -122,6 +122,9 @@ install-man:
 	  "man/recipe-get.1.rst" \
 	  "$(MAN_DIR)/man1/recipe-get.1"
 	rst2man \
+	  "man/package-info-get.1.rst" \
+	  "$(MAN_DIR)/man1/recipe-get.1"
+	rst2man \
 	  "man/termux-install-shared.1.rst" \
 	  "$(MAN_DIR)/man1/termux-install-shared.1"
 
