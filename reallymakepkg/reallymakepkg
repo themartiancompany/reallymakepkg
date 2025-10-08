@@ -63,6 +63,7 @@ _global_variables() {
   repo_dir=""
   config_file=""
   pkgver_update=""
+  cache_clean=""
   linker_c=""
   makepkg_args=()
   color=""
@@ -88,10 +89,11 @@ _reallymakepkg() {
     _config_file="${2}" \
     _repo_dir="${3}" \
     _linker_c="${4}"
+    _cache_clean="${5}" \
     _makepkg_opts=() \
     _makepkg_args=()
   shift \
-    4
+    5
   _makepkg_args=(
     "$@"
   )
@@ -852,9 +854,11 @@ _makepkg() {
     mv \
       *".pkg."* \
       "${OLDPWD}"
-    rm \
-      -rf \
-      "${work_dir}"
+    if [[ "${_cache_clean}" == "y" ]]; then
+      rm \
+        -rf \
+        "${work_dir}"
+    fi
   fi
   cd \
     "${OLDPWD}"
@@ -887,6 +891,19 @@ _target_platform_auto_detect() {
     "target" \
     "platform" \
     "${_platform}"
+}
+
+_cache_clean_auto_detect() {
+  local \
+    _cache_clean
+  _cache_clean="y"
+  if [[ " ${makepkg_opts[*]} " == *" --nobuild "* ]]; then
+    _cache_clean="n"
+  fi
+  _set_override \
+    "cache" \
+    "clean" \
+    "${_cache_clean}"
 }
 
 # Set defaults and, if present, overrides
@@ -933,6 +950,7 @@ _set_overrides() {
     "pkgver" \
     "update" \
     "n"
+  _cache_clean_auto_detect
   _target_platform_auto_detect
 }
 
@@ -976,6 +994,10 @@ usage:
                           Default: '${target_platform}'
      -u                   Whether to enable automatic
                           'pkgver' update in the recipe.
+                          Default: '${pkgver_update}'
+     -T                   Enable to not clean the build
+                          directory after ending the task.
+                          Default: '${cache_clean}'
 
      -h                   This message.
      -c                   Enable colors
@@ -1011,6 +1033,7 @@ _show_config() {
   _msg_info "               Build date:   ${build_date}"
   _msg_info "     Repository directory:   ${repo_dir}"
   _msg_info "           Work directory:   ${work_dir}"
+  _msg_info "              Clean cache:   ${cache_clean}"
   _msg_info "                C library:   ${termux_libc}"
   _msg_info "             Architecture:   $(uname -m)"
   _msg_info "         Operating system:   $(uname -o)"
@@ -1039,7 +1062,7 @@ _show_config() {
 _globals
 _global_variables
 
-_getopts='w:C:g:r:ul:P:cvh?'
+_getopts='w:C:g:r:ul:P:Tcvh'
 while \
   getopts \
     "${_getopts}" \
@@ -1060,12 +1083,14 @@ while \
       override_linker_c="${OPTARG}" ;;
     P) \
       override_target_platform="${OPTARG}" ;;
+    T) \
+      override_cache_clean="n" ;;
     c) \
       override_color="y" ;;
     v) \
       override_quiet="n" ;;
-    h|?) \
-      _set_overrides \
+    h) \
+      _set_overrides && \
       _usage \
         0 ;;
     *) \
@@ -1090,6 +1115,7 @@ app_opts=(
   "${config_file}"
   "${repo_dir}"
   "${linker_c}"
+  "${cache_clean}"
   "${makepkg_args[@]}"
 )
 _reallymakepkg \

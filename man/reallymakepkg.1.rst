@@ -62,6 +62,8 @@ Options
 -P platform        Can be 'termux' or 'arch'.
 -u                 Whether to enable automatic
                    'pkgver' update in the recipe.
+-T                 Enable to not clean the build
+                   directory after ending the task.
 
 -h                 Display help.
 -c                 Enable color output
