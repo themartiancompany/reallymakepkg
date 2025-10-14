@@ -897,7 +897,7 @@ _cache_clean_auto_detect() {
   local \
     _cache_clean
   _cache_clean="y"
-  if [[ " ${makepkg_opts[*]} " == *" --nobuild "* ]]; then
+  if [[ " ${makepkg_args[*]} " == *" --nobuild "* ]]; then
     _cache_clean="n"
   fi
   _set_override \
