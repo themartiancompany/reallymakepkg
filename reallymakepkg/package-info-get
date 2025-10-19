@@ -36,6 +36,11 @@ _sourced \
   source \
     "${_crash_bash}"
 
+_requirements() {
+  _check_cmd \
+    "tar"
+}
+
 _global_variables() {
   get_date=""
   target_package=""
@@ -210,6 +215,7 @@ _show_config() {
   _msg_info "                 Variable:   ${target_variable}"
 }
 
+_requirements
 _globals
 _global_variables
 

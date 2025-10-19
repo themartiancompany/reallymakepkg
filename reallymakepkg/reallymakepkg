@@ -43,6 +43,15 @@ if [[ ! -v "TERMUX_VERSION" ]]; then
   _etc="/etc" 
 fi
 
+_requirements() {
+  _check_cmd \
+    "gawk"
+  _check_cmd \
+    "pacman"
+  _check_cmd \
+    "sed"
+}
+
 _global_variables() {
   build_date=""
   [[ -v LDFLAGS ]] || \
@@ -1059,6 +1068,7 @@ _show_config() {
   #       'PKGBUILD')"
 }
 
+_requirements
 _globals
 _global_variables
 
