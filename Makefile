@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 #    ----------------------------------------------------------------------
-#    Copyright © 2024, 2025  Pellegrino Prevete
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
 #
 #    All rights reserved
 #    ----------------------------------------------------------------------
@@ -37,10 +37,14 @@ DATA_DIR=$(DESTDIR)$(PREFIX)/share
 DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/$(_PROJECT)
 MAN_DIR?=$(DESTDIR)$(PREFIX)/share/man
 
-FILES=$(wildcard $(_PROJECT))
+FILES=\
+  $(wildcard \
+      $(_PROJECT))
 DOC_FILES=\
-  $(wildcard *.rst) \
-  $(wildcard *.md)
+  $(wildcard \
+      *.rst) \
+  $(wildcard \
+      *.md)
 
 _CHECK_TARGETS:=\
   shellcheck

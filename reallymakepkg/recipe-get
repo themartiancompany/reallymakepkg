@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 
 #    ----------------------------------------------------------------------
-#    Copyright © 2024, 2025  Pellegrino Prevete
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
 #
 #    All rights reserved
 #    ----------------------------------------------------------------------
@@ -21,13 +21,12 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-_bin="$( \
+_bin="$(
   dirname \
-    "$( \
-      command \
-        -v \
-        "env")")"
-_lib="$( \
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
   realpath \
     "${_bin}/../lib")"
 _crash_bash="${_lib}/libcrash-bash/crash-bash"
@@ -54,10 +53,10 @@ _recipe_get() {
     _type
   _ref="${_obj}[@]"
   if [[ "${quiet}" == "y" ]]; then
-    _value="$( \
+    _value="$(
       source \
         "${_pkgbuild}" 2>/dev/null && \
-      _type="$( \
+      _type="$(
         _get_type \
           "${_obj}")" && \
       if \
@@ -73,10 +72,10 @@ _recipe_get() {
         )
       fi)"
   elif [[ "${quiet}" == "n" ]]; then
-    _value="$( \
+    _value="$(
       source \
         "${_pkgbuild}" && \
-      _type="$( \
+      _type="$(
         _get_type \
           "${_obj}")" && \
       if \

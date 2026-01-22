@@ -2,7 +2,7 @@
    SPDX-License-Identifier: AGPL-3.0-or-later
 
    ----------------------------------------------------------------------
-   Copyright © 2024, 2025  Pellegrino Prevete
+   Copyright © 2024, 2025, 2026  Pellegrino Prevete
 
    All rights reserved
    ----------------------------------------------------------------------
@@ -31,10 +31,12 @@ Cross-platform makepkg extension
 :Version: reallymakepkg |version|
 :Manual section: 1
 
+
 Synopsis
 ========
 
 reallymakepkg *[options]* -- *[makepkg_opts]*
+
 
 Description
 ===========
@@ -44,6 +46,7 @@ Cross-platform makepkg extension.
 Reallymakepkg is the reference build tool
 for Ur universal recipes and so the reference
 build tool for Life and DogeOS programs.
+
 
 Options
 ========
@@ -69,15 +72,18 @@ Options
 -c                 Enable color output
 -v                 Enable verbose output
 
+
 Bugs
 ====
 
 https://github.com/themartiancompany/reallymakepkg/-/issues
 
+
 Copyright
 =========
 
 Copyright Pellegrino Prevete. AGPL-3.0.
+
 
 See also
 ========
