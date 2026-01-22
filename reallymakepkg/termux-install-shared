@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 
 #    ----------------------------------------------------------------------
-#    Copyright © 2024, 2025  Pellegrino Prevete
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
 #
 #    All rights reserved
 #    ----------------------------------------------------------------------
@@ -21,13 +21,12 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-_bin="$( \
+_bin="$(
   dirname \
-    "$( \
-      command \
-        -v \
-        "env")")"
-_lib="$( \
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
   realpath \
     "${_bin}/../lib")"
 _crash_bash="${_lib}/libcrash-bash/crash-bash"
@@ -83,7 +82,7 @@ _termux_install_shared() {
       -v
     )
   fi
-  _os="$( \
+  _os="$(
     uname \
       -o)"
   _android_sdcard="/storage/emulated/0"
@@ -96,7 +95,7 @@ _termux_install_shared() {
     _install_dir="${_root_dir}${_real_dir}"
   elif [[ "${_os}" == "Android" ]]; then
     _real_dir="${_android_sdcard}/${_shared_dir}"
-    _pkgdir="$( \
+    _pkgdir="$(
       _pkgdir_get \
         "${_root_dir}")"
     _install_dir="${_pkgdir}${_real_dir}"
