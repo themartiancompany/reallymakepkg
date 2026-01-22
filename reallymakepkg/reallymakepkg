@@ -21,13 +21,12 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-_bin="$( \
+_bin="$(
   dirname \
-    "$( \
-      command \
-        -v \
-	  "env")")"
-_lib="$( \
+    "$(command \
+         -v \
+	 "env")")"
+_lib="$(
   realpath \
     "${_bin}/../lib")"
 _crash_bash="${_lib}/libcrash-bash/crash-bash"
@@ -36,7 +35,7 @@ _sourced \
   source \
     "${_crash_bash}"
 
-_etc="$( \
+_etc="$(
   realpath \
     "${_bin}/../etc")"
 if [[ ! -v "TERMUX_VERSION" ]]; then
@@ -124,7 +123,7 @@ _flags() {
     _coreutils_flags=()
   [[ -v gl_cv_host_operating_system ]] || \
     _coreutils_flags+=(
-      gl_cv_host_operating_system="$( \
+      gl_cv_host_operating_system="$(
         uname \
 	  -o)"
     )
@@ -137,7 +136,7 @@ _get_cc() {
     -v \
      $(stat \
          -c="%N" \
-         "$( \
+         "$(
            command \
              -v \
                "cc" \
@@ -153,9 +152,9 @@ _get_cc() {
 
 _get_usr() {
   dirname \
-    "$( \
+    "$(
       dirname \
-        "$( \
+        "$(
 	  _get_cc)")"
 }
 
@@ -176,7 +175,7 @@ _termux_err_flags() {
     "unused-but-set-variable"
     "unused-const-variable"
   )
-  _cc="$( \
+  _cc="$(
     basename \
       "$(_get_cc)")"
   if [[ "${_cc}" == *"gcc"* ]]; then
@@ -194,10 +193,10 @@ _termux_arch_flags() {
   local \
     _arch \
     _os
-  _arch="$( \
+  _arch="$(
     uname \
       -m)"
-  _os="$( \
+  _os="$(
     uname \
       -o)"
   if [[ "${_arch}" == \
@@ -264,7 +263,7 @@ _termux_auto_flags() {
   local \
     _os \
     _libc="bionic"
-  _os="$( \
+  _os="$(
     uname \
       -o)"
   [[ "${_os}" == 'GNU/Linux' ]] && \
@@ -320,17 +319,14 @@ _termux_flags() {
   # _cppflags+=(
   #   -I"$(_get_usr)/include/libelf.h"
   # )
-  _termux_"$( \
-    _get \
-      "termux" \
-      "libc")"_flags
+  "_termux_${termux_libc}_flags"
   _termux_glib_flags
   _ldflags+=(
     -lelf
     -fopenmp
     -static-openmp
   )
-  LDFLAGS="$( \
+  LDFLAGS="$(
     _add_missing_flags \
       "${LDFLAGS}" \
       "${_ldflags[*]}")"
@@ -358,12 +354,14 @@ _is_python_pkg() {
     _provides=() \
     _pkgname=()
   _flag=""
-  _provides=( $( \
+  _provides=( $(
     _recipe_get \
-      "provides") )
-  _pkgname=( $( \
+      "provides")
+  )
+  _pkgname=( $(
     _recipe_get \
-      "pkgname") )
+      "pkgname")
+  )
   _msg_info \
     "Packages: ${_pkgname[*]}"
   for _pkg \
@@ -374,9 +372,8 @@ _is_python_pkg() {
     fi
   done
   for _pkg \
-    in $( \
-      _recipe_get \
-        "pkgname"); do
+    in $(_recipe_get \
+           "pkgname"); do
     if [[ "${_pkg}" == "python"*"-"* ]]; then
       _flag=true
       break
@@ -394,28 +391,28 @@ _is_setuptools_pkg() {
     _py2_flag \
     _recipe
   _recipe="${work_dir}/PKGBUILD" 
-  _pkgname=( $( \
+  _pkgname=( $(
     _recipe_get \
       "pkgname")
   )
-  _makedepends=( $( \
+  _makedepends=( $(
     _recipe_get \
       "makedepends")
   )
-  _flag="$( \
+  _flag="$(
     cat \
       "${_recipe}" | \
       grep \
         -o \
 	'setup.py')" || \
     true
-  _py2_flag="$( \
+  _py2_flag="$(
     echo \
       " ${_pkgname[*]} " | \
       grep \
         " python2-" || \
     true)"
-  _it_flag="$( \
+  _it_flag="$(
     echo \
       " ${_pkgname[*]} " | \
       grep \
@@ -463,11 +460,11 @@ _is_build_pkg() {
     "with openmp; see ${_clang16_url}"
   )
   _flag=""
-  _makedepends=( $( \
+  _makedepends=( $(
     _recipe_get \
       "makedepends")
   )
-  _pkgname=( $( \
+  _pkgname=( $(
     _recipe_get \
       "pkgname")
   )
@@ -476,7 +473,7 @@ _is_build_pkg() {
     if \
       [[ "${_pkg}" == "python-build" ]] || \
       [[ "${_pkg}" == '${_py}-build' ]]; then
-      _clang16="$( \
+      _clang16="$(
 	command \
 	  -v \
 	  "clang-16")"
@@ -530,11 +527,11 @@ _is_pip_pkg() {
     "with openmp; see ${_clang16_url}"
   )
   _flag=""
-  _makedepends=( $( \
+  _makedepends=( $(
     _recipe_get \
       "makedepends")
   )
-  _pkgname=( $( \
+  _pkgname=( $(
     _recipe_get \
       "pkgname")
   )
@@ -543,7 +540,7 @@ _is_pip_pkg() {
     if \
       [[ "${_pkg}" == "python-pip" ]] || \
       [[ "${_pkg}" == '${_py}-pip' ]]; then
-      _clang16="$( \
+      _clang16="$(
 	command \
 	  -v \
 	  "clang-16")"
@@ -577,15 +574,12 @@ _setuptools_quirk() {
   local \
     _pattern \
     _recipe
-  _recipe="$( \
-    _get \
-      "work" \
-      "dir")/PKGBUILD"
+  _recipe="${work_dir}/PKGBUILD"
   _is_setuptools_pkg 
   if [[ "${_flag}" != "" ]]; then
     _msg_info \
       "Detected as setuptools pkg"
-    _pattern="$( \
+    _pattern="$(
       cat \
         "${_recipe}" | \
         grep \
@@ -597,10 +591,7 @@ _setuptools_quirk() {
       sed \
         -i \
         "s%${_pattern}%root=\"\${pkgdir}\"%g" \
-        "$( \
-	  _get \
-	    "work" \
-	    "dir")/PKGBUILD"
+        "${_recipe}"
     fi
   fi || \
     true
@@ -608,17 +599,15 @@ _setuptools_quirk() {
 
 _build_quirk() {
   local \
+    _msg=()
     _pattern \
     _recipe
-  _recipe="$( \
-    _get \
-      "work" \
-      "dir")/PKGBUILD"
+  _recipe="${work_dir}/PKGBUILD"
   _is_build_pkg
   if [[ "${_flag}" == "true" ]]; then
     _msg_info \
       "Using 'pkgdir' instead of 'terdir' in build module's --destdir"
-    _pattern="$( \
+    _pattern="$(
       cat \
         "${_recipe}" | \
         grep \
@@ -637,24 +626,25 @@ _build_quirk() {
         "Option 'destdir' not found, check PKGBUILD"
     fi
   elif [[ "${_flag}" != "true" ]]; then
+    _msg=(
+      "Package is not a python-build package."
+    )
     _msg_info \
-      "package is not a python-build package"
+      "${_msg[*]}"
   fi
 }
 
 _pip_quirk() {
   local \
+    _msg=() \
     _pattern \
     _recipe
-  _recipe="$( \
-    _get \
-      "work" \
-      "dir")/PKGBUILD"
+  _recipe="${work_dir}/PKGBUILD"
   _is_pip_pkg
   if [[ "${_flag}" == "true" ]]; then
     _msg_info \
       "Using 'pkgdir' instead of 'terdir' in pip opt --root"
-    _pattern="$( \
+    _pattern="$(
       cat \
         "${_recipe}" | \
         grep \
@@ -669,12 +659,18 @@ _pip_quirk() {
         "s%${_pattern}%root=\"\${pkgdir}\"%g" \
         "${_recipe}"
     elif [[ "${_pattern}" == "" ]]; then
+      _msg=(
+        "Option 'root' not found, check PKGBUILD."
+      )
       _msg_warning \
-        "Option 'root' not found, check PKGBUILD"
+        "${_msg[*]}"
     fi
   elif [[ "${_flag}" != "true" ]]; then
+      _msg=(
+        "Package is not a python-pip package."
+      )
     _msg_info \
-      "package is not a python-pip package"
+      "${_msg[*]}"
   fi
 }
 
@@ -709,11 +705,11 @@ _is_glib_pkg() {
     _pkg \
     _pkgname \
     _flag=""
-  _makedepends=( $( \
+  _makedepends=( $(
     _recipe_get \
       "makedepends")
   )
-  _pkgname=( $( \
+  _pkgname=( $(
     _recipe_get \
       "pkgname")
   )
@@ -744,13 +740,15 @@ _termux_quirks() {
   local \
     _pkgdir='${terdir}' \
     _depends=() \
+    _recipe \
     _msg=()
+  _recipe="${work_dir}/PKGBUILD"
   _msg=(
     "Checking for Termux quirks to apply."
   )
   _msg_info \
     "${_msg[*]}"
-  _depends=( $( \
+  _depends=( $(
     _recipe_get \
       "depends")
   )
@@ -763,22 +761,23 @@ _termux_quirks() {
     sed \
       "s%pkgdir%terdir%g" \
       "$(pwd)/PKGBUILD" > \
-      "$( \
-        _get \
-          "work" \
-          "dir")/PKGBUILD"
+      "${_recipe}"
     _libc_quirks
     return
   fi
+  _msg=(
+    "Detected Android app build;"
+    "no edits to 'pkgdir'"
+  )
   _msg_info \
-    "Detected Android app build; no edits to 'pkgdir'"
+    "${_msg[*]}"
 }
 
 _work_dir_setup() {
   local \
     _repo_dir="${1}" \
     _work_dir_non_empty
-  _work_dir_non_empty="$( \
+  _work_dir_non_empty="$(
     ls \
       "${work_dir}/" \
       2>/dev/null || \
@@ -888,7 +887,7 @@ _target_platform_auto_detect() {
     _os \
     _platform
   _platform=""
-  _os="$( \
+  _os="$(
     uname \
       -a)"
   if [[ "${_os}" == "Android" ]]; then
@@ -939,7 +938,7 @@ _set_overrides() {
   _set_override \
     "work" \
     "dir" \
-    "$( \
+    "$(
       mktemp \
         -d)"
   _set_override \
@@ -1033,7 +1032,15 @@ _display_flags() {
 # Shows configuration options.
 _show_config() {
   local \
-    _pygmentize_opts=()
+    _pygmentize_opts=() \
+    _arch \
+    _os
+  _arch="$(
+    uname \
+      -m)"
+  _os="$(
+    uname \
+      -o)"
   _pygmentize_opts=(
     -l bash
     -O style=emacs,linenos=1
@@ -1044,8 +1051,8 @@ _show_config() {
   _msg_info "           Work directory:   ${work_dir}"
   _msg_info "              Clean cache:   ${cache_clean}"
   _msg_info "                C library:   ${termux_libc}"
-  _msg_info "             Architecture:   $(uname -m)"
-  _msg_info "         Operating system:   $(uname -o)"
+  _msg_info "             Architecture:   ${_arch}"
+  _msg_info "         Operating system:   ${_os}"
   _msg_info "                 Compiler:   $(_get_cc)"
   _msg_info "                   Linker:   ${linker_c}"
   _msg_info "           Target platfom:   ${target_platform}"
@@ -1063,7 +1070,7 @@ _show_config() {
   # _msg_info "      PKGBUILD:"
   # _msg_info ""
   # _msg_info \
-  #   "$( \
+  #   "$(
   #     cat \
   #       'PKGBUILD')"
 }
@@ -1079,33 +1086,36 @@ while \
     arg; do
   case \
     "${arg}" in
-    w) \
+    w)
       override_work_dir="${OPTARG}" ;;
-    C) \
+    C)
       override_config_file="${OPTARG}" ;;
-    g) \
+    g)
       override_termux_libc="${OPTARG}" ;;
-    r) \
+    r)
       override_repo_dir="${OPTARG}" ;;
-    u) \
+    u)
       override_pkgver_update="y" ;;
-    l) \
+    l)
       override_linker_c="${OPTARG}" ;;
-    P) \
+    P)
       override_target_platform="${OPTARG}" ;;
-    T) \
+    T)
       override_cache_clean="n" ;;
-    c) \
+    c)
       override_color="y" ;;
-    v) \
+    v)
       override_quiet="n" ;;
-    h) \
-      _set_overrides && \
+    h)
+      _set_overrides
       _usage \
         0 ;;
-    *) \
+    *)
+      _msg=(
+        "Invalid argument '${arg}'."
+      )
       _msg_error \
-        "Invalid argument '${arg}'." \
+        "${_msg[*]}" \
         0
       _usage \
         1
@@ -1113,7 +1123,7 @@ while \
   esac
 done
 shift \
-  $(( \
+  $((
     OPTIND - 1 \
   ))
 makepkg_args=(
