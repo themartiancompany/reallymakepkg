@@ -599,7 +599,7 @@ _setuptools_quirk() {
 
 _build_quirk() {
   local \
-    _msg=()
+    _msg=() \
     _pattern \
     _recipe
   _recipe="${work_dir}/PKGBUILD"
