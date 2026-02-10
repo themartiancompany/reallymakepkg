@@ -28,7 +28,7 @@ ifeq ($(strip $(TERMUX_VERSION)),'')
   CONF_DIR=$(DESTDIR)/etc
 else
   PREFIX := $(TERMUX_PREFIX)/usr
-  CONF_DIR=$(DESTDIR)$(TERMUX_PREFIX)/etc
+  CONF_DIR=$(DESTDIR)$(TERMUX_PREFIX)/usr/etc
 endif
 
 
