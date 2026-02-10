@@ -31,7 +31,6 @@ else
   CONF_DIR=$(DESTDIR)$(TERMUX_PREFIX)/usr/etc
 endif
 
-
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 DATA_DIR=$(DESTDIR)$(PREFIX)/share
 DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/$(_PROJECT)
