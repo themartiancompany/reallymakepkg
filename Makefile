@@ -25,10 +25,10 @@ _PROJECT=reallymakepkg
 PREFIX ?= /usr
 
 ifeq ($(strip $(TERMUX_VERSION)),'')
+  CONF_DIR=$(DESTDIR)/etc
+else
   PREFIX := $(TERMUX_PREFIX)/usr
   CONF_DIR=$(DESTDIR)$(TERMUX_PREFIX)/etc
-else
-  CONF_DIR=$(DESTDIR)/etc
 endif
 
 
