@@ -129,6 +129,13 @@ _recipe_get() {
   fi
   echo \
     "${_value}"
+  if [[ "${_value}" != "" ]]; then
+    return \
+      0
+  elif [[ "${_value}" == "" ]]; then
+    return \
+      1
+  fi
 }
 
 _pkgbuild_auto_detect() {
