@@ -343,7 +343,8 @@ _recipe_get() {
   _pkgbuild="${work_dir}/PKGBUILD"
   recipe-get \
     "${_pkgbuild}" \
-    "${_variable}"
+    "${_variable}" || \
+  true
 }
 
 # Roughly determines if a package
@@ -696,6 +697,8 @@ _python_quirks() {
       true
     _pip_quirk || \
      true
+  else
+    true
   fi
 }
 
