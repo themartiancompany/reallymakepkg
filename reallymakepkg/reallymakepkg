@@ -856,20 +856,31 @@ _makepkg() {
     makepkg \
       "${_makepkg_opts[@]}" \
       "${_makepkg_args[@]}" \
-      1>/dev/null \
-      2>/dev/null
+      1>"/dev/null" \
+      2>"/dev/null"
   fi
-  if ( [[ $? -eq 0 ]] && \
-       [[ "$(ls "./")"*".pkg."* != "" ]] ) || \
-       ( [[ " ${_makepkg_opts[*]} " == *" --nobuild "* ]] ); then
-    mv \
-      *".pkg."* \
-      "${OLDPWD}"
-    if [[ "${_cache_clean}" == "y" ]]; then
-      rm \
-        -rf \
-        "${work_dir}"
+  if [[ $? -eq 0 ]] && \
+     [[ " ${_makepkg_opts[*]} " == *" --nobuild "* ]]; then
+    if [[ "${PWD}/"*".pkg."* != "" ]]; then
+      mv \
+        *".pkg."* \
+        "${OLDPWD}"
+    else
+     if [[ " ${_makepkg_opts[*]} " != *" --nobuild "* ]]; then
+      _msg=(
+        "No packages detected"
+        "in build directory '${PWD}',"
+        "seemingly no package has"
+        "been built."
+      )
+      _msg_warning \
+        "${_msg[*]}"
     fi
+  fi
+  if [[ "${_cache_clean}" == "y" ]]; then
+    rm \
+      -rf \
+      "${work_dir}"
   fi
   cd \
     "${OLDPWD}"
