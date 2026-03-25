@@ -875,6 +875,7 @@ _makepkg() {
       )
       _msg_warning \
         "${_msg[*]}"
+     fi
     fi
   fi
   if [[ "${_cache_clean}" == "y" ]]; then
