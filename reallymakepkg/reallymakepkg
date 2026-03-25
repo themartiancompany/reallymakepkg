@@ -860,7 +860,7 @@ _makepkg() {
       2>"/dev/null"
   fi
   if [[ $? -eq 0 ]]; then
-    if [[ -e "${PWD}/"*"pkg."* ]]; then
+    if [[ -e *"pkg."* ]]; then
       mv \
         "${PWD}/"*"pkg."* \
         "${OLDPWD}"
@@ -875,11 +875,25 @@ _makepkg() {
           "No packages detected"
           "in build directory '${PWD}',"
           "seemingly no package has"
-          "been built."
+          "been built. Still trying"
+	  "moving whatever file in the"
+	  "work directory whose name has the"
+	  "'pkg.' pattern in it."
         )
         _msg_warning \
           "${_msg[*]}"
+        mv \
+          "${PWD}/"*"pkg."* \
+          "${OLDPWD}" || \
+	  true
       fi
+    else
+      _msg=(
+        "Error building the package."
+      )
+      _msg_error \
+        "${_msg[*]}" \
+	1
     fi
   fi
   if [[ "${_cache_clean}" == "y" ]]; then
