@@ -89,9 +89,12 @@ install: $(_INSTALL_TARGETS)
 install-scripts:
 
 	for _file in $(FILES); do \
+          _file_name="$$( \
+	    basename \
+	      "$${_file}")"; \
 	  $(_INSTALL_EXE) \
-	    "$(_PROJECT)/$${_file}" \
-	    "$(BIN_DIR)/$${_file}"; \
+	    "$(_PROJECT)/$${_file_name}" \
+	    "$(BIN_DIR)/$${_file_name}"; \
 	done
 
 install-configs:
@@ -115,9 +118,12 @@ install-man:
 	$(_INSTALL_DIR) \
 	  "$(MAN_DIR)/man1"
 	for _file in $(FILES); do \
+          _file_name="$$( \
+	    basename \
+	      "$${_file}")"; \
 	  rst2man \
-	    "man/$${_file}.1.rst" \
-	    "$(MAN_DIR)/man1/$${_file}.1"; \
+	    "man/$${_file_name}.1.rst" \
+	    "$(MAN_DIR)/man1/$${_file_name}.1"; \
 	done
 
 uninstall:
