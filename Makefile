@@ -79,27 +79,20 @@ check: $(_CHECK_TARGETS)
 
 shellcheck:
 
-	shellcheck -s bash $(FILES)
+	shellcheck \
+	  -s \
+	    "bash" \
+	  $(FILES)
 
 install: $(_INSTALL_TARGETS)
 
 install-scripts:
 
-	$(_INSTALL_EXE) \
-	  "$(_PROJECT)/$(_PROJECT)" \
-	  "$(BIN_DIR)/$(_PROJECT)"
-	$(_INSTALL_EXE) \
-	  "$(_PROJECT)/package-info-get" \
-	  "$(BIN_DIR)/package-info-get"
-	$(_INSTALL_EXE) \
-	  "$(_PROJECT)/recipe-get" \
-	  "$(BIN_DIR)/recipe-get"
-	$(_INSTALL_EXE) \
-	  "$(_PROJECT)/termux-install-shared" \
-	  "$(BIN_DIR)/termux-install-shared"
-	$(_INSTALL_EXE) \
-	  "$(_PROJECT)/version-split" \
-	  "$(BIN_DIR)/version-split"
+	for _file in $(FILES); do \
+	  $(_INSTALL_EXE) \
+	    "$(_PROJECT)/$${_file}" \
+	    "$(BIN_DIR)/$${_file}"; \
+	done
 
 install-configs:
 
@@ -121,21 +114,11 @@ install-man:
 
 	$(_INSTALL_DIR) \
 	  "$(MAN_DIR)/man1"
-	rst2man \
-	  "man/$(_PROJECT).1.rst" \
-	  "$(MAN_DIR)/man1/$(_PROJECT).1"
-	rst2man \
-	  "man/recipe-get.1.rst" \
-	  "$(MAN_DIR)/man1/recipe-get.1"
-	rst2man \
-	  "man/package-info-get.1.rst" \
-	  "$(MAN_DIR)/man1/recipe-get.1"
-	rst2man \
-	  "man/termux-install-shared.1.rst" \
-	  "$(MAN_DIR)/man1/termux-install-shared.1"
-	rst2man \
-	  "man/version-split.1.rst" \
-	  "$(MAN_DIR)/man1/version-split.1"
+	for _file in $(FILES); do \
+	  rst2man \
+	    "man/$${_file}.1.rst" \
+	    "$(MAN_DIR)/man1/$${_file}.1"; \
+	done
 
 uninstall:
 

@@ -866,16 +866,21 @@ _makepkg() {
         "${WD}/"*".pkg."* \
         "${OLDPWD}"
     else
-     if [[ " ${_makepkg_opts[*]} " != *" --nobuild "* ]]; then
-      _msg=(
-        "No packages detected"
-        "in build directory '${PWD}',"
-        "seemingly no package has"
-        "been built."
-      )
-      _msg_warning \
-        "${_msg[*]}"
-     fi
+      if [[ " ${_makepkg_opts[*]} " != *" --nobuild "* ]]; then
+        echo \
+          "PWD: '${PWD}'"
+        ls \
+          -lsh \
+          "${PWD}"
+        _msg=(
+          "No packages detected"
+          "in build directory '${PWD}',"
+          "seemingly no package has"
+          "been built."
+        )
+        _msg_warning \
+          "${_msg[*]}"
+      fi
     fi
   fi
   if [[ "${_cache_clean}" == "y" ]]; then
