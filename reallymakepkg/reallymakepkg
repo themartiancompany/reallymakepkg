@@ -859,11 +859,10 @@ _makepkg() {
       1>"/dev/null" \
       2>"/dev/null"
   fi
-  if [[ $? -eq 0 ]] && \
-     [[ " ${_makepkg_opts[*]} " == *" --nobuild "* ]]; then
-    if [[ -e "${PWD}/"*".pkg."* ]]; then
+  if [[ $? -eq 0 ]]; then
+    if [[ -e "${PWD}/"*"pkg."* ]]; then
       mv \
-        "${WD}/"*".pkg."* \
+        "${PWD}/"*"pkg."* \
         "${OLDPWD}"
     else
       if [[ " ${_makepkg_opts[*]} " != *" --nobuild "* ]]; then
