@@ -871,7 +871,7 @@ _makepkg() {
         "${PWD}/"*"pkg."* \
         "${OLDPWD}"
     else
-      if [[ " ${_makepkg_opts[*]} " != *" --nobuild "* ]]; then
+      if [[ " ${_makepkg_args[*]} " != *" --nobuild "* ]]; then
         echo \
           "PWD: '${PWD}'"
         ls \
