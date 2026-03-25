@@ -861,6 +861,12 @@ _makepkg() {
   fi
   if [[ $? -eq 0 ]]; then
     if [[ -e *"pkg."* ]]; then
+        _msg=(
+          "Moving found packages"
+	  "to '${OLDPWD}'."
+        )
+        _msg_info \
+          "${_msg[*]}"
       mv \
         "${PWD}/"*"pkg."* \
         "${OLDPWD}"
@@ -876,24 +882,23 @@ _makepkg() {
           "in build directory '${PWD}',"
           "seemingly no package has"
           "been built. Still trying"
-	  "moving whatever file in the"
-	  "work directory whose name has the"
-	  "'pkg.' pattern in it."
+          "moving whatever file in the"
+          "work directory whose name has the"
+          "'pkg.' pattern in it."
         )
         _msg_warning \
           "${_msg[*]}"
         mv \
           "${PWD}/"*"pkg."* \
           "${OLDPWD}" || \
-	  true
+        true
+      else
+        _msg=(
+          "Sources correctly retrieved."
+        )
+        _msg_info \
+          "${_msg[*]}"
       fi
-    else
-      _msg=(
-        "Error building the package."
-      )
-      _msg_error \
-        "${_msg[*]}" \
-	1
     fi
   fi
   if [[ "${_cache_clean}" == "y" ]]; then
