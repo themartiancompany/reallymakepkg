@@ -38,7 +38,7 @@ MAN_DIR?=$(DESTDIR)$(PREFIX)/share/man
 
 FILES=\
   $(wildcard \
-      $(_PROJECT))
+      $(_PROJECT)/*)
 DOC_FILES=\
   $(wildcard \
       *.rst) \
