@@ -21,40 +21,41 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-==============
-recipe-get
-==============
+=================
+version-split
+=================
 
--------------------------------------
-Reads variables from PKGBUILDs.
--------------------------------------
-:Version: recipe-get |version|
+------------------------------------------------------
+Version split
+------------------------------------------------------
+:Version: version-split |version|
 :Manual section: 1
 
 Synopsis
 ========
 
-recipe-get *[options]* -- *PKGBUILD* *variable*
+version-split *[options]* -- *string* *variable*
 
 
 Description
 ===========
 
-Reads a variable from a PKGBUILD.
+Extract package name or version from a depend string.
 
+Arguments
+===========
+
+* string
+
+  A depend string from an universal recipe (PKGBUILD).
+
+* variable
+
+  It can be either 'name' for the package name or
+  'version' for the package version.
 
 Options
 ========
-
--o output-type     Output type.
-                   Can be 'string' or 'array'.
-                   Setting the first sets
-                   delimiter to \n,
-                   the second to \0.
-                   Default: string
--d array-delimiter Sets a specific delimiter
-                   when printing array values.
-                   Default: \n.
 
 -h                 Display help.
 -c                 Enable color output
@@ -73,6 +74,7 @@ Copyright Pellegrino Prevete. AGPL-3.0.
 See also
 ========
 
+* recipe-get
 * reallymakepkg
 * package-info-get
 * termux-install-shared

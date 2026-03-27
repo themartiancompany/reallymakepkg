@@ -21,40 +21,39 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-==============
-recipe-get
-==============
+=================
+platform-get
+=================
 
--------------------------------------
-Reads variables from PKGBUILDs.
--------------------------------------
-:Version: recipe-get |version|
+------------------------------------------------------
+Returns platform name
+------------------------------------------------------
+:Version: platform-get |version|
 :Manual section: 1
 
 Synopsis
 ========
 
-recipe-get *[options]* -- *PKGBUILD* *variable*
+platform-get *[options]* -- *os-name*
 
 
 Description
 ===========
 
-Reads a variable from a PKGBUILD.
+
+Return platform name.
+
+
+Arguments
+===========
+
+* os-name
+  
+  OS string returned by 'uname -o'.
 
 
 Options
 ========
-
--o output-type     Output type.
-                   Can be 'string' or 'array'.
-                   Setting the first sets
-                   delimiter to \n,
-                   the second to \0.
-                   Default: string
--d array-delimiter Sets a specific delimiter
-                   when printing array values.
-                   Default: \n.
 
 -h                 Display help.
 -c                 Enable color output
@@ -73,9 +72,11 @@ Copyright Pellegrino Prevete. AGPL-3.0.
 See also
 ========
 
+* recipe-get
 * reallymakepkg
 * package-info-get
 * termux-install-shared
+* version-split
 * ur
 * lur
 * fur

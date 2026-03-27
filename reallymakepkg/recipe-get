@@ -39,6 +39,8 @@ _global_variables() {
   get_date=""
   target_pkgbuild=""
   target_variable=""
+  output_type=""
+  array_delimiter=""
   color=""
   quiet=""
 }
@@ -48,9 +50,27 @@ _recipe_get() {
   local \
     _pkgbuild="${1}" \
     _obj="${2}" \
+    _output_type="${3}" \
+    _delim \
+    _msg=() \
+    _out \
     _value \
     _ref \
     _type
+  _delim=""
+  if [[ "${_output_type}" != "string" ]] && \
+     [[ "${_output_type}" != "array" ]]; then
+    _msg=(
+      "Unknown output type"
+      "'${_output_type}'."
+    )
+    _msg_error \
+      "${_msg[*]}" \
+      1
+  fi
+  if (( 3 < "${#}" )); then
+    _delim="${4}"
+  fi
   _ref="${_obj}[@]"
   if [[ "${quiet}" == "y" ]]; then
     _value="$(
@@ -59,17 +79,19 @@ _recipe_get() {
       _type="$(
         _get_type \
           "${_obj}")" && \
-      if \
-        [[ "${_type}" == "string" ]] || \
-        [[ "${_type}" == "array" ]]; then
-          printf \
-            "%s\n" \
-            "${!_ref}";
+      if [[ "${_type}" == "string" ]]; then
+        printf \
+          '%s\n' \
+          "${!_ref}"; \
+      elif [[ "${_type}" == "array" ]]; then
+        printf \
+          "%s${_delim}" \
+          "${!_ref}"; \
       elif [[ "${_type}" == "undefined" ]]; then
         _msg=( \
           'PKGBUILD seems not to contain'
           "the '${_obj} variable"
-        )
+        ); \
       fi)"
   elif [[ "${quiet}" == "n" ]]; then
     _value="$(
@@ -78,32 +100,92 @@ _recipe_get() {
       _type="$(
         _get_type \
           "${_obj}")" && \
-      if \
-        [[ "${_type}" == "string" ]] || \
-        [[ "${_type}" == "array" ]]; then
-          printf \
-            "%s\n" \
-            "${!_ref}";
+      if [[ "${_type}" != "undefined" && \
+            "${_type}" != "${_output_type}" ]]; then
+	_msg=(
+          "Variable type overridden with"
+          "'${_output_type}'."
+        ); \
+        _msg_warning \
+          "${_msg[*]}";
+        _type="${_output_type}"; \
+      fi && \
+      if [[ "${_type}" == "string" ]]; then
+        printf \
+          '%s\n' \
+          "${!_ref}";
+      elif [[ "${_type}" == "array" ]]; then
+        printf \
+          "%s${_delim}" \
+          "${!_ref}"; \
       elif [[ "${_type}" == "undefined" ]]; then
         _msg=(
           'PKGBUILD seems not to contain'
-          "the '${_obj} variable"
+          "the '${_obj}' variable."
         )
+        _msg_warning \
+          "${_msg[*]}";
       fi)"
   fi
   echo \
     "${_value}"
+  if [[ "${_value}" != "" ]]; then
+    return \
+      0
+  elif [[ "${_value}" == "" ]]; then
+    return \
+      1
+  fi
 }
 
 _pkgbuild_auto_detect() {
   echo \
     "$(realpath \
-         "$(pwd)/PKGBUILD")"
+         "${PWD}/PKGBUILD")"
+}
+
+_output_type_auto_detect() {
+  local \
+    _output_type
+  _output_type="string"
+  if [[ "${target_variable}" == "makedepends" ]]; then
+    _output_type="string"
+  else
+    _output_type="string"
+  fi
+  _set_override \
+    "output" \
+    "type" \
+    "${_output_type}"
+}
+
+_array_delimiter_auto_detect() {
+  local \
+    _delim
+  if [[ "${output_type}" == "string" ]]; then
+    _delim='\n'
+  elif [[ "${output_type}" == "array" ]]; then
+    _delim=' '
+  fi
+  _set_override \
+    "array" \
+    "delimiter" \
+    "${_delim}"
 }
 
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
   _set_override \
     "get" \
     "date" \
@@ -116,16 +198,8 @@ _set_overrides() {
     "target" \
     "variable" \
     "pkgbase"
-  if [[ -v override_color ]]; then
-    color="${override_color}"
-  elif [[ -z "${color}" ]]; then
-    color="n"
-  fi
-  if [[ -v override_quiet ]]; then
-    quiet="${override_quiet}"
-  elif [[ -z "${quiet}" ]]; then
-    quiet="y"
-  fi
+  _output_type_auto_detect
+  _array_delimiter_auto_detect
 }
 
 # Show help usage, with an exit status.
@@ -148,6 +222,16 @@ usage:
     <variable>
 
   options:
+     -d array-delimiter   Sets a specific delimiter
+                          when printing array values.
+                          Default: '\\n'.
+     -o output-type       Output type.
+                          Can be 'string' or 'array'.
+                          Setting the first sets
+                          delimiter to '\\n',
+                          the second to '\\0'.
+                          Default: '${output_type}'
+
      -h                   This message.
      -c                   Enable colors
      -v                   Enable verbose output
@@ -176,6 +260,8 @@ _show_config() {
   _msg_info "                 Get date:   ${get_date}"
   _msg_info "                 PKGBUILD:   ${target_pkgbuild}"
   _msg_info "                 Variable:   ${target_variable}"
+  _msg_info "              Output Type:   ${output_type}"
+  _msg_info "                Delimiter:   ${array_delimiter}"
 }
 
 _globals
@@ -183,28 +269,38 @@ _global_variables
 
 while \
   getopts \
-    'cvh?' \
+    'd:o:cvh?' \
     arg; do
   case \
     "${arg}" in
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _usage \
-	   1 ;;
+    d)
+      override_array_delimiter="${OPTARG}" ;;
+    o)
+      override_output_type="${OPTARG}" ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides
+      _usage \
+        1 ;;
     *)
-    _msg_error \
-      "Invalid argument '${arg}'" \
-      0
-    _usage \
-      1
-    ;;
+      _msg=(
+        "Invalid argument '${arg}'."
+      )
+      _msg_error \
+        "${_msg[*]}" \
+        0
+      _usage \
+        1 ;;
   esac
 done
 shift \
-  $(( \
+  $((
     OPTIND - 1 \
   ))
-if (( "$#" < 2 )); then
+if (( "${#}" < 2 )); then
   _set_overrides
   _usage \
     1
@@ -215,7 +311,10 @@ _set_overrides
 app_opts=(
   "${target_pkgbuild}"
   "${target_variable}"
+  "${output_type}"
+  "${array_delimiter}"
 )
+_show_config
 _recipe_get \
   "${app_opts[@]}" \
   "${args[@]}"

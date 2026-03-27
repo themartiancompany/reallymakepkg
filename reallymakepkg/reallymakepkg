@@ -343,7 +343,8 @@ _recipe_get() {
   _pkgbuild="${work_dir}/PKGBUILD"
   recipe-get \
     "${_pkgbuild}" \
-    "${_variable}"
+    "${_variable}" || \
+  true
 }
 
 # Roughly determines if a package
@@ -696,6 +697,8 @@ _python_quirks() {
       true
     _pip_quirk || \
      true
+  else
+    true
   fi
 }
 
@@ -853,20 +856,55 @@ _makepkg() {
     makepkg \
       "${_makepkg_opts[@]}" \
       "${_makepkg_args[@]}" \
-      1>/dev/null \
-      2>/dev/null
+      1>"/dev/null" \
+      2>"/dev/null"
   fi
-  if ( [[ $? -eq 0 ]] && \
-       [[ "$(ls "./")"*".pkg."* != "" ]] ) || \
-       ( [[ " ${_makepkg_opts[*]} " == *" --nobuild "* ]] ); then
-    mv \
-      *".pkg."* \
-      "${OLDPWD}"
-    if [[ "${_cache_clean}" == "y" ]]; then
-      rm \
-        -rf \
-        "${work_dir}"
+  if [[ $? -eq 0 ]]; then
+    if [[ -e *"pkg."* ]]; then
+        _msg=(
+          "Moving found packages"
+	  "to '${OLDPWD}'."
+        )
+        _msg_info \
+          "${_msg[*]}"
+      mv \
+        "${PWD}/"*"pkg."* \
+        "${OLDPWD}"
+    else
+      if [[ " ${_makepkg_args[*]} " != *" --nobuild "* ]]; then
+        echo \
+          "PWD: '${PWD}'"
+        ls \
+          -lsh \
+          "${PWD}"
+        _msg=(
+          "No packages detected"
+          "in build directory '${PWD}',"
+          "seemingly no package has"
+          "been built. Still trying"
+          "moving whatever file in the"
+          "work directory whose name has the"
+          "'pkg.' pattern in it."
+        )
+        _msg_warning \
+          "${_msg[*]}"
+        mv \
+          "${PWD}/"*"pkg."* \
+          "${OLDPWD}" || \
+        true
+      else
+        _msg=(
+          "Sources correctly retrieved."
+        )
+        _msg_info \
+          "${_msg[*]}"
+      fi
     fi
+  fi
+  if [[ "${_cache_clean}" == "y" ]]; then
+    rm \
+      -rf \
+      "${work_dir}"
   fi
   cd \
     "${OLDPWD}"

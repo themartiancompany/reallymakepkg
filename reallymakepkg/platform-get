@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+
+# SPDX-License-Identifier: AGPL-3.0
+
+#    ----------------------------------------------------------------------
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
+#
+#    All rights reserved
+#    ----------------------------------------------------------------------
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+_bin="$(
+  dirname \
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" 2>/dev/null || \
+  source \
+    "${_crash_bash}"
+
+_requirements() {
+  _check_cmd \
+    "uname" \
+    "coreutils"
+}
+
+_global_variables() {
+  get_date=""
+  target_os=""
+  color=""
+  quiet=""
+}
+
+# Reads a variable from the PKGBUILD
+_platform_get() {
+  local \
+    _target_os="${1}" \
+    _platform
+  _platform="arch"
+  if [[ "${_target_os}" == "" ]]; then
+    _target_os="$(
+      uname \
+        -o)"
+  fi
+  if [[ "${_target_os}" == "Android" ]]; then
+    _platform="android"
+  elif [[ "${_target_os}" == "GNU/Linux" ]]; then
+    _platform="gnu"
+    if [[ -v "TERMUX_VERSION" ]]; then
+      _platform="android"
+    fi
+  elif [[ "${_target_os}" == "Msys" ]]; then
+    _platform="windows"
+  fi
+  echo \
+    "${_platform}"
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "get" \
+    "date" \
+    "$(_get_date_human)"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+  _set_override \
+    "target" \
+    "os" \
+    "$(uname \
+         -o)"
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      usage_text << \
+        ENDUSAGETEXT || true
+
+Return platform name.
+
+usage:
+
+  ${app_name}
+    [options]
+    <os-name> 
+
+  args:
+    os-name               OS string returned by 'uname -o'.
+
+  options:
+     -h                   This message.
+     -c                   Enable colors
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  printf \
+    '%s\n' \
+    "${usage_text}"
+  exit \
+    "${1}"
+}
+
+_display_flags() {
+  local \
+    _flags=(
+      ${1}
+    )
+  for _flag \
+    in "${_flags[@]}"; do
+  _msg_info "                              ${_flag}"
+  done
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration settings"
+  _msg_info "                 Get date:   ${get_date}"
+  _msg_info "                Target OS:   ${target_os}"
+}
+
+_requirements
+_globals
+_global_variables
+
+while \
+  getopts \
+    'cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _usage \
+	   1 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'." \
+      0
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $((
+    OPTIND - 1 ))
+if (( 0 < "$#" )); then
+  target_os="${1}"
+fi
+_set_overrides
+_show_config
+app_opts=(
+  "${target_os}"
+)
+_platform_get \
+  "${app_opts[@]}" \
+  "${args[@]}"
