@@ -84,7 +84,7 @@ _package_info_get() {
     _variables <<< \
     "${_variables_string}" || \
   true
-  if [[ "${_quiet}" == "n" ]]; then
+  if [[ "${quiet}" == "n" ]]; then
     _msg=(
       "Displaying full '.PKGINFO'"
       "file."
