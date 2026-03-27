@@ -84,6 +84,17 @@ _package_info_get() {
     _variables <<< \
     "${_variables_string}" || \
   true
+  if [[ "${_quiet}" == "n" ]]; then
+    _msg=(
+      "Displaying full '.PKGINFO'"
+      "file."
+    )
+    _msg_info \
+      "${_msg[*]}"
+    printf \
+      '%s\n' \
+      "${_variables[@]}"
+  fi
   for _variable in "${_variables[@]}"; do
     # echo \
     #   "${_variable}"
