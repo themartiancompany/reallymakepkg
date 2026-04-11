@@ -821,7 +821,7 @@ _work_dir_setup() {
       mktemp \
        -d)"
     cp \
-      "${_work_dir}/PKGBUILD" \
+      "${work_dir}/PKGBUILD" \
       "${_tmpdir}"
     cd \
       "${_tmpdir}"
@@ -846,13 +846,13 @@ _work_dir_setup() {
         -v \
 	-r \
 	"${_file}" \
-	"${_work_dir}/${_file}"
+	"${work_dir}/${_file}"
     done
     cp \
       -v \
       -r \
       "PKGBUILD" \
-      "${_work_dir}/PKGBUILD"
+      "${work_dir}/PKGBUILD"
     cd \
       "${_oldpwd}"
   fi
