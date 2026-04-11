@@ -779,7 +779,14 @@ _termux_quirks() {
 _work_dir_setup() {
   local \
     _repo_dir="${1}" \
-    _work_dir_non_empty
+    _work_dir_non_empty \
+    _os \
+    _oldpwd \
+    _tmpdir \
+    _msg=()
+  _os="$(
+    uname \
+      -o)"
   _work_dir_non_empty="$(
     ls \
       "${work_dir}/" \
@@ -802,6 +809,28 @@ _work_dir_setup() {
     "${_repo_dir}/"{"","."}* \
     "${work_dir}" 2>/dev/null || \
     true
+  if [[ "${_os}" == "Msys" ]]; then
+    _msg=(
+      "Apply CRLF fix."
+    )
+    _msg_info \
+      "${_msg[*]}"
+    _oldpwd="${PWD}"
+    _tmpdir="$(
+      mktemp \
+       -d)"
+    cp \
+      "${_work_dir}/PKGBUILD" \
+      "${_tmpdir}"
+    cd \
+      "${_tmpdir}"
+    cp \
+      -v \
+      -r \
+      "PKGBUILD"
+    cd \
+      "${_oldpwd}"
+  fi
 }
 
 # Internal makepkg
@@ -819,6 +848,9 @@ _makepkg() {
   _makepkg_args=(
     "$@"
   )
+  # _os="$(
+  #   uname \
+  #     -o)"
   if [[ -v "TERMUX_VERSION" ]]; then
     _config_file="${_etc}/reallymakepkg/makepkg.android.conf"  
   else
