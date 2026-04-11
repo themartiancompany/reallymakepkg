@@ -933,6 +933,8 @@ _target_platform_auto_detect() {
     _platform="termux"
   elif [[ "${_os}" == "GNU/Linux" ]]; then
     _platform="arch"
+  elif [[ "${_os}" == "Msys" ]]; then
+    _platform="windows"
   fi
   _set_override \
     "target" \
