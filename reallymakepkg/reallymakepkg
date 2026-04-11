@@ -779,10 +779,11 @@ _termux_quirks() {
 _work_dir_setup() {
   local \
     _repo_dir="${1}" \
-    _work_dir_non_empty \
-    _os \
+    _file \
     _oldpwd \
+    _os \
     _tmpdir \
+    _work_dir_non_empty \
     _msg=()
   _os="$(
     uname \
@@ -824,6 +825,29 @@ _work_dir_setup() {
       "${_tmpdir}"
     cd \
       "${_tmpdir}"
+    dos2unix \
+      "PKGBUILD"
+    for _file \
+      in $(recipe-get \
+             "PKGBUILD" \
+             "source"); do
+      if [[ " ${_file} " != " "*"::"*" " ]]; then
+        _msg=(
+          "Applying CLRF fix on local"
+	  "universal recipe repository"
+	  "file '${_file}'."
+        )
+	_msg_info \
+          "${_msg[*]}"
+        dos2unix \
+          "${_file}"
+      fi
+      cp \
+        -v \
+	-r \
+	"${_file}" \
+	"${_work_dir}/${_file}"
+    done
     cp \
       -v \
       -r \
