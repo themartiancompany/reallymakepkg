@@ -829,7 +829,7 @@ _work_dir_setup() {
     cp \
       -c \
       -v \
-      "${_work_dir}/"* \
+      "${work_dir}/"* \
       "${tmpdir}"
     cd \
       "${_tmpdir}"
