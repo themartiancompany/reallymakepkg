@@ -785,9 +785,13 @@ _work_dir_setup() {
     _tmpdir \
     _work_dir_non_empty \
     _cp_opts=() \
+    _rm_opts=() \
     _msg=()
   if [[ "${quiet}" == "n" ]]; then
     _cp_opts+=(
+      -v
+    )
+    _rm_opts+=(
       -v
     )
   fi
@@ -837,7 +841,7 @@ _work_dir_setup() {
       "${_cp_opts[@]}" \
       -r \
       "${work_dir}/"* \
-      "${tmpdir}" || \
+      "${_tmpdir}" || \
     true
     cd \
       "${_tmpdir}"
@@ -873,6 +877,11 @@ _work_dir_setup() {
     true
     cd \
       "${_oldpwd}"
+    rm \
+      "${_rm_opts[@]}" \
+      -rf \
+      "${_tmpdir}" || \
+    true
   fi
 }
 
