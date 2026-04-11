@@ -1042,8 +1042,8 @@ usage:
      -u                   Whether to enable automatic
                           'pkgver' update in the recipe.
                           Default: '${pkgver_update}'
-     -T                   Enable to not clean the build
-                          directory after ending the task.
+     -T                   Keeps work directory after
+                          a successful build.
                           Default: '${cache_clean}'
 
      -h                   This message.
