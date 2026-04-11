@@ -869,7 +869,8 @@ _makepkg() {
           "${_msg[*]}"
       mv \
         "${PWD}/"*"pkg."* \
-        "${OLDPWD}"
+        "${OLDPWD}"|| \
+	true
     else
       if [[ " ${_makepkg_args[*]} " != *" --nobuild "* ]]; then
         echo \
