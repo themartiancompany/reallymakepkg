@@ -821,8 +821,16 @@ _work_dir_setup() {
       mktemp \
        -d)"
     cp \
+      -c \
+      -v \
       "${work_dir}/PKGBUILD" \
-      "${_tmpdir}"
+      "${_tmpdir}" || \
+      true
+    cp \
+      -c \
+      -v \
+      "${_work_dir}/"* \
+      "${tmpdir}"
     cd \
       "${_tmpdir}"
     dos2unix \
@@ -834,19 +842,19 @@ _work_dir_setup() {
       if [[ " ${_file} " != " "*"::"*" " ]]; then
         _msg=(
           "Applying CLRF fix on local"
-	  "universal recipe repository"
-	  "file '${_file}'."
+          "universal recipe repository"
+          "file '${_file}'."
         )
-	_msg_info \
+        _msg_info \
           "${_msg[*]}"
         dos2unix \
           "${_file}"
+        cp \
+          -v \
+	        -r \
+	        "${_file}" \
+	        "${work_dir}/${_file}"
       fi
-      cp \
-        -v \
-	-r \
-	"${_file}" \
-	"${work_dir}/${_file}"
     done
     cp \
       -v \
