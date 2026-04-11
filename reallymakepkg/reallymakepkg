@@ -784,7 +784,13 @@ _work_dir_setup() {
     _os \
     _tmpdir \
     _work_dir_non_empty \
+    _cp_opts=() \
     _msg=()
+  if [[ "${quiet}" == "n" ]]; then
+    _cp_opts+=(
+      -v
+    )
+  fi
   _os="$(
     uname \
       -o)"
@@ -806,6 +812,7 @@ _work_dir_setup() {
       "${work_dir}"
   fi
   cp \
+    "${_cp_opts[@]}" \
     -af \
     "${_repo_dir}/"{"","."}* \
     "${work_dir}" 2>/dev/null || \
@@ -821,16 +828,17 @@ _work_dir_setup() {
       mktemp \
        -d)"
     cp \
-      -c \
-      -v \
+      "${_cp_opts[@]}" \
+      -r \
       "${work_dir}/PKGBUILD" \
       "${_tmpdir}" || \
       true
     cp \
-      -c \
-      -v \
+      "${_cp_opts[@]}" \
+      -r \
       "${work_dir}/"* \
-      "${tmpdir}"
+      "${tmpdir}" || \
+    true
     cd \
       "${_tmpdir}"
     dos2unix \
@@ -850,17 +858,19 @@ _work_dir_setup() {
         dos2unix \
           "${_file}"
         cp \
-          -v \
-	        -r \
-	        "${_file}" \
-	        "${work_dir}/${_file}"
+          "${_cp_opts[@]}" \
+          -r \
+          "${_file}" \
+          "${work_dir}/${_file}" || \
+        true
       fi
     done
     cp \
-      -v \
+      "${_cp_opts[@]}" \
       -r \
       "PKGBUILD" \
-      "${work_dir}/PKGBUILD"
+      "${work_dir}/PKGBUILD" || \
+    true
     cd \
       "${_oldpwd}"
   fi
