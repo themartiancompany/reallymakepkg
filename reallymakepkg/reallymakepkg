@@ -811,7 +811,7 @@ _work_dir_setup() {
     true
   if [[ "${_os}" == "Msys" ]]; then
     _msg=(
-      "Apply CRLF fix."
+      "Apply CRLF fix on Windows."
     )
     _msg_info \
       "${_msg[*]}"
@@ -827,7 +827,8 @@ _work_dir_setup() {
     cp \
       -v \
       -r \
-      "PKGBUILD"
+      "PKGBUILD" \
+      "${_work_dir}/PKGBUILD"
     cd \
       "${_oldpwd}"
   fi
