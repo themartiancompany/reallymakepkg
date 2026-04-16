@@ -105,6 +105,9 @@ install-configs:
 	$(_INSTALL_FILE) \
 	  "configs/makepkg.gnu.conf" \
 	  "$(CONF_DIR)/$(_PROJECT)/makepkg.gnu.conf"
+	$(_INSTALL_FILE) \
+	  "configs/makepkg.windows.conf" \
+	  "$(CONF_DIR)/$(_PROJECT)/makepkg.windows.conf"
 
 install-doc:
 

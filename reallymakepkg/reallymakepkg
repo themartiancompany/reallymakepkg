@@ -900,13 +900,15 @@ _makepkg() {
   _makepkg_args=(
     "$@"
   )
-  # _os="$(
-  #   uname \
-  #     -o)"
+  _os="$(
+    uname \
+      -o)"
   if [[ -v "TERMUX_VERSION" ]]; then
     _config_file="${_etc}/reallymakepkg/makepkg.android.conf"  
-  else
+  elif [[ "${_os}" == "GNU/Linux" ]]; then
     _config_file="${_etc}/reallymakepkg/makepkg.gnu.conf"  
+  elif [[ "${_os}" == "Msys" ]]; then
+    _config_file="${_etc}/reallymakepkg/makepkg.windows.conf"  
   fi
   if [[ "${_os}" != "Msys" ]]; then
     # There is a MINGW64 makepkg.conf
