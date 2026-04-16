@@ -908,10 +908,15 @@ _makepkg() {
   else
     _config_file="${_etc}/reallymakepkg/makepkg.gnu.conf"  
   fi
-  _makepkg_opts+=(
-    --config
-      "${_config_file}"
-  )
+  if [[ "${_os}" != "Msys" ]]; then
+    # There is a MINGW64 makepkg.conf
+    # file installed but it's not tested.
+    # For now let's just run without one.
+    _makepkg_opts+=(
+      --config
+        "${_config_file}"
+    )
+  fi
   _work_dir_setup \
     "${_repo_dir}"
   if [[ -v "TERMUX_VERSION" ]]; then
