@@ -19,7 +19,7 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-TERMUX_PREFIX ?= /data/data/com.termux
+TERMUX_PREFIX ?= /data/data/com.termux/files
 
 _PROJECT=reallymakepkg
 PREFIX ?= /usr
