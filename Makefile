@@ -108,6 +108,9 @@ install-configs:
 	$(_INSTALL_FILE) \
 	  "configs/makepkg.windows.conf" \
 	  "$(CONF_DIR)/$(_PROJECT)/makepkg.windows.conf"
+	$(_INSTALL_FILE) \
+	  "configs/makepkg.msys2.conf" \
+	  "$(CONF_DIR)/$(_PROJECT)/makepkg.msys2.conf"
 
 install-doc:
 
@@ -139,7 +142,8 @@ uninstall:
 	  "$(BIN_DIR)/termux-install-shared"
 	rm \
 	  -r \
-	  "$(DATA_DIR)/$(_PROJECT)"
+	  "$(DATA_DIR)/$(_PROJECT)" \
+	  "$(CONF_DIR)/$(_PROJECT)"
 	rm \
 	  -r \
 	  "$(DOC_DIR)"
