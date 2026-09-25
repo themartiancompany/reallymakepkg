@@ -923,6 +923,7 @@ _makepkg() {
       _config_file="${_etc}/reallymakepkg/makepkg.windows.conf"  
     elif [[ "${_msys2_libc}" == "msys2" ]]; then  
       _config_file="${_etc}/reallymakepkg/makepkg.msys.conf"  
+    fi
   fi
   if [[ "${_os}" != "Msys" ]]; then
     # There is a MINGW64 makepkg.conf
@@ -968,7 +969,7 @@ _makepkg() {
     if [[ -e *"pkg."* ]]; then
         _msg=(
           "Moving found packages"
-	  "to '${OLDPWD}'."
+          "to '${OLDPWD}'."
         )
         _msg_info \
           "${_msg[*]}"
