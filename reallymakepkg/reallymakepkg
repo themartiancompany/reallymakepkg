@@ -70,6 +70,8 @@ _global_variables() {
     TERMUX_VERSION=""
   fi
   termux_glib=""
+  posix_libc=""
+  msys2_libc=""
   termux_libc=""
   target_platform=""
   work_dir=""
@@ -100,13 +102,16 @@ _reallymakepkg() {
   local \
     _update="${1}" \
     _config_file="${2}" \
-    _repo_dir="${3}" \
-    _linker_c="${4}"
-    _cache_clean="${5}" \
+    _msys2_libc="${3}" \
+    _posix_libc="${4}" \
+    _termux_libc="${5}" \
+    _repo_dir="${6}" \
+    _linker_c="${7}"
+    _cache_clean="${8}" \
     _makepkg_opts=() \
     _makepkg_args=()
   shift \
-    5
+    8
   _makepkg_args=(
     "$@"
   )
@@ -271,8 +276,9 @@ _termux_auto_flags() {
   _os="$(
     uname \
       -o)"
-  [[ "${_os}" == 'GNU/Linux' ]] && \
+  if [[ "${_os}" == 'GNU/Linux' ]]; then
     _libc="glibc" 
+  fi
   termux_libc="${_libc}"
   "_termux_${termux_libc}_flags"
 }
@@ -1036,6 +1042,14 @@ _target_platform_auto_detect() {
     "target" \
     "platform" \
     "${_platform}"
+  _set_override \
+    "posix" \
+    "libc" \
+    "glibc"
+  _set_override \
+    "msys2" \
+    "libc" \
+    "mingw64"
 }
 
 _cache_clean_auto_detect() {
@@ -1128,10 +1142,18 @@ usage:
      -w <work_dir>        Builds the package in a
                           specific directory instead
                           than in a temporary one.
+     -P <libc>            Unix C library to use in
+                          GNU/Linux environments
+                          ('glibc', 'musl').
+                          Default: '${posix_libc}'
      -g <libc>            C library to use in
-                          Termux environments
+                          Android (Termux) environments
                           ('glibc', 'bionic').
                           Default: '${termux_libc}'
+     -G <libc>            C library to use in
+                          Windows (Msys2) environments
+                          ('msys2', 'mingw64').
+                          Default: '${msys2_libc}'
      -l <linker>          C linker to use in
                           Termux environments
                           ('ld', 'lld').
@@ -1187,7 +1209,9 @@ _show_config() {
   _msg_info "     Repository directory:   ${repo_dir}"
   _msg_info "           Work directory:   ${work_dir}"
   _msg_info "              Clean cache:   ${cache_clean}"
-  _msg_info "                C library:   ${termux_libc}"
+  _msg_info "          POSIX C library:   ${posix_libc}"
+  _msg_info "        Android C library:   ${termux_libc}"
+  _msg_info "        Windows C library:   ${msys2_libc}"
   _msg_info "             Architecture:   ${_arch}"
   _msg_info "         Operating system:   ${_os}"
   _msg_info "                 Compiler:   $(_get_cc)"
@@ -1216,7 +1240,7 @@ _requirements
 _globals
 _global_variables
 
-_getopts='w:C:g:r:ul:P:Tcvh'
+_getopts='w:C:P:g:G:r:ul:P:Tcvh'
 while \
   getopts \
     "${_getopts}" \
@@ -1227,8 +1251,12 @@ while \
       override_work_dir="${OPTARG}" ;;
     C)
       override_config_file="${OPTARG}" ;;
+    P)
+      override_posix_libc="${OPTARG}" ;;
     g)
       override_termux_libc="${OPTARG}" ;;
+    G)
+      override_msys2_libc="${OPTARG}" ;;
     r)
       override_repo_dir="${OPTARG}" ;;
     u)
@@ -1270,6 +1298,9 @@ _set_overrides
 app_opts=(
   "${pkgver_update}"
   "${config_file}"
+  "${msys2_libc}"
+  "${posix_libc}"
+  "${termux_libc}"
   "${repo_dir}"
   "${linker_c}"
   "${cache_clean}"
