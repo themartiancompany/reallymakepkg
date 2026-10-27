@@ -31,7 +31,13 @@ OS-like collection of software and operating
 system superset.
 
 In particular compatible with Arch Linux
-and Android (Termux) and Windows.
+and Android (DogeOS Android Base,
+[Termux](
+  https://github.com/termux/termux-app)
+-compatible)
+and Windows (
+[MSYS2](
+  https://github.com/msys2/msys2).
 
 This program is written using the
 [Crash Bash](
