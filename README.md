@@ -27,10 +27,11 @@ Helps to seamlessly build PKGBUILDs, in this
 context called 'Universal Recipes'.
 
 Reference build tool for the DogeOS and Life
-OS-like collection of software.
+OS-like collection of software and operating
+system superset.
 
 In particular compatible with Arch Linux
-and Android (Termux).
+and Android (Termux) and Windows.
 
 This program is written using the
 [Crash Bash](
